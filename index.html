@@ -1,0 +1,2619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fluoresense Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#f0f4f8; --surface:#fff; --s2:#f7f9fc; --s3:#eef2f7;
+  --brd:#d1dae6; --brd2:#b8c6d8;
+  --ac:#0d9488; --ac2:#2563eb; --ac3:#7c3aed; --ac4:#ea6c00;
+  --tx:#1e293b; --mu:#64748b; --mu2:#475569;
+  --dg:#dc2626; --wn:#b45309;
+  --rr:10px; --rs:6px;
+  --shadow: 0 4px 24px rgba(13,148,136,0.08), 0 1px 4px rgba(0,0,0,0.06);
+  --shadow2: 0 8px 32px rgba(13,148,136,0.12), 0 2px 8px rgba(0,0,0,0.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-size:14px;line-height:1.6;min-height:100vh}
+h1,h2,h3,h4,h5,.mono{font-family:'Space Mono',monospace}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:3px}
+input,textarea,select{font-family:'DM Sans',sans-serif;font-size:13px;border:1.5px solid var(--brd);border-radius:var(--rs);padding:8px 10px;background:var(--surface);color:var(--tx);transition:border-color .2s,box-shadow .2s;outline:none;width:100%}
+input:focus,textarea:focus,select:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(13,148,136,0.12)}
+textarea{resize:vertical;min-height:80px}
+textarea.filled{background:rgba(13,148,136,0.04);border-color:rgba(13,148,136,0.4)}
+label{font-size:12px;font-weight:600;color:var(--mu2);margin-bottom:4px;display:block;font-family:'Space Mono',monospace}
+button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;border-radius:var(--rs);transition:all .2s;font-size:13px;font-weight:600}
+.btn-primary{background:var(--ac);color:#fff;padding:9px 18px}
+.btn-primary:hover{background:#0b7a70;transform:translateY(-1px);box-shadow:0 4px 12px rgba(13,148,136,0.3)}
+.btn-primary:disabled{background:#94a3b8;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-secondary{background:var(--s3);color:var(--tx);padding:9px 18px;border:1.5px solid var(--brd)}
+.btn-secondary:hover{background:var(--brd);border-color:var(--brd2)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-danger{background:#fee2e2;color:var(--dg);border:1px solid #fecaca}
+.btn-danger:hover{background:#fecaca}
+.card{background:var(--surface);border-radius:var(--rr);border:1.5px solid var(--brd);box-shadow:var(--shadow);padding:24px}
+.stat-card{background:var(--s2);border:1.5px solid var(--brd);border-radius:var(--rs);padding:14px 16px}
+.stat-card .stat-label{font-size:11px;color:var(--mu);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.5px}
+.stat-card .stat-value{font-size:20px;font-weight:700;font-family:'Space Mono',monospace;color:var(--tx);margin-top:2px}
+.stat-card .stat-sub{font-size:11px;color:var(--mu);margin-top:1px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.badge{display:inline-flex;align-items:center;justify-content:center;background:var(--ac);color:#fff;font-size:11px;font-family:'Space Mono',monospace;border-radius:20px;padding:2px 8px;min-width:24px}
+.badge.muted{background:var(--s3);color:var(--mu)}
+.err{color:var(--dg);font-size:12px;margin-top:4px}
+.info-box{background:rgba(13,148,136,0.06);border:1.5px solid rgba(13,148,136,0.2);border-radius:var(--rs);padding:12px 14px;font-size:12.5px;color:var(--mu2);line-height:1.6}
+.info-box.warn{background:rgba(234,108,0,0.06);border-color:rgba(234,108,0,0.2);color:var(--wn)}
+kbd{background:var(--s3);border:1px solid var(--brd2);border-radius:3px;padding:1px 5px;font-family:'Space Mono',monospace;font-size:11px;color:var(--mu2)}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;color:var(--mu);text-align:center;gap:12px}
+.empty-state svg{opacity:.35}
+.empty-state p{font-size:13px;max-width:240px;line-height:1.6}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.panel-left,.panel-right{display:flex;flex-direction:column;gap:14px}
+.panel-right.hidden{display:none}
+.section-title{font-size:13px;font-weight:700;color:var(--mu2);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.chart-wrap{position:relative;background:var(--s2);border:1.5px solid var(--brd);border-radius:var(--rs);padding:12px}
+.chart-wrap canvas{max-height:220px}
+.export-row{display:flex;gap:8px;flex-wrap:wrap;padding-top:4px}
+hr.divider{border:none;border-top:1.5px solid var(--brd);margin:4px 0}
+.analyte-slot,.interferent-slot{background:var(--s2);border:1.5px solid var(--brd);border-radius:var(--rs);padding:12px;display:flex;flex-direction:column;gap:8px;position:relative}
+.color-dot{width:12px;height:12px;border-radius:50%;display:inline-block;flex-shrink:0}
+.slot-header{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.slot-header .color-dot{width:14px;height:14px}
+table.data-table{width:100%;border-collapse:collapse;font-size:12px}
+table.data-table th{background:var(--s3);padding:7px 10px;text-align:left;font-family:'Space Mono',monospace;font-size:11px;color:var(--mu2);border-bottom:1.5px solid var(--brd);white-space:nowrap}
+table.data-table td{padding:7px 10px;border-bottom:1px solid var(--brd);color:var(--tx)}
+table.data-table tr:last-child td{border-bottom:none}
+table.data-table tr:hover td{background:var(--s2)}
+.status-ok{color:#059669}
+.status-warn{color:var(--wn)}
+.status-err{color:var(--dg)}
+.pill-toggle{display:flex;background:var(--s3);border-radius:20px;padding:3px;gap:2px;border:1.5px solid var(--brd)}
+.pill-toggle button{background:transparent;color:var(--mu);border-radius:17px;padding:6px 14px;font-size:12.5px;font-weight:600}
+.pill-toggle button.active{background:var(--surface);color:var(--ac);box-shadow:0 1px 4px rgba(0,0,0,0.1)}
+.sub-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px}
+.sub-tab-btn{background:var(--s3);color:var(--mu);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;border:1.5px solid var(--brd)}
+.sub-tab-btn.active{background:var(--ac);color:#fff;border-color:var(--ac)}
+.flash-gate{animation:flashGate .4s ease}
+@keyframes flashGate{0%,100%{border-color:var(--brd)}25%,75%{border-color:var(--dg);box-shadow:0 0 0 3px rgba(220,38,38,0.15)}}
+.spinner{display:inline-block;width:18px;height:18px;border:2.5px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* PAGE 1 */
+#page-register{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e0f7fa 0%,#e8f5e9 50%,#f3f4f6 100%);padding:20px}
+.reg-card{max-width:460px;width:100%;background:var(--surface);border-radius:16px;box-shadow:var(--shadow2);padding:36px 32px}
+.logo-wrap{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.logo-wrap svg{flex-shrink:0}
+.logo-text{font-family:'Space Mono',monospace;font-weight:700;font-size:15px;color:var(--tx);line-height:1.2}
+.logo-text span{color:var(--ac)}
+.stepper{display:flex;align-items:center;gap:0;margin:20px 0 24px}
+.step{display:flex;align-items:center;gap:6px;font-size:12px;font-family:'Space Mono',monospace;color:var(--mu)}
+.step.active{color:var(--ac)}
+.step.done{color:#059669}
+.step-num{width:24px;height:24px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.step-line{flex:1;height:2px;background:var(--brd);margin:0 6px}
+.step.done .step-line{background:#059669}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{margin-bottom:14px}
+.reg-note{font-size:11px;color:var(--mu);text-align:center;margin-top:14px;line-height:1.5}
+/* PAGE 2 */
+#page-data{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e0f7fa 0%,#e8f5e9 50%,#f3f4f6 100%);padding:20px}
+.data-card{max-width:680px;width:100%;background:var(--surface);border-radius:16px;box-shadow:var(--shadow2);padding:32px}
+.mode-label{font-size:12px;font-family:'Space Mono',monospace;color:var(--mu2);margin-bottom:8px}
+.textarea-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.count-badge-wrap{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+/* PAGE 3 */
+#page-analytics{display:none;flex-direction:column;min-height:100vh}
+#page-analytics.active{display:flex}
+#sticky-header{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:1.5px solid var(--brd);box-shadow:0 2px 12px rgba(0,0,0,0.07)}
+/* Top bar: logo + chips + action buttons */
+.header-top-bar{max-width:1400px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:10px;height:48px;border-bottom:1px solid var(--brd)}
+.header-logo{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.header-title{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--tx);white-space:nowrap}
+/* Tab grid: all tabs in one wrapping row */
+.nav-tab-grid{max-width:1400px;margin:0 auto;padding:6px 20px;display:grid;grid-template-columns:repeat(12,1fr);gap:4px;background:var(--s2)}
+.nav-tab{background:var(--surface);color:var(--mu2);border-radius:var(--rs);padding:7px 4px;font-size:11px;font-family:'Space Mono',monospace;font-weight:700;border:1.5px solid var(--brd);white-space:nowrap;text-align:center;overflow:hidden;text-overflow:ellipsis;transition:all .15s;cursor:pointer;width:100%}
+.nav-tab:hover{background:var(--s3);color:var(--tx);border-color:var(--brd2);transform:translateY(-1px)}
+.nav-tab.active{background:var(--ac);color:#fff;border-color:var(--ac);box-shadow:0 2px 8px rgba(13,148,136,0.25)}
+@media(max-width:900px){.nav-tab-grid{grid-template-columns:repeat(6,1fr)}}
+@media(max-width:540px){.nav-tab-grid{grid-template-columns:repeat(4,1fr)}.header-title{display:none}}
+.user-chip{background:var(--s3);border:1.5px solid var(--brd);border-radius:20px;padding:4px 12px 4px 8px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;white-space:nowrap}
+.mode-chip{border-radius:20px;padding:3px 10px;font-size:11px;font-family:'Space Mono',monospace;font-weight:700;white-space:nowrap}
+.mode-chip.quench{background:rgba(220,38,38,0.1);color:var(--dg);border:1px solid rgba(220,38,38,0.2)}
+.mode-chip.enhance{background:rgba(13,148,136,0.1);color:var(--ac);border:1px solid rgba(13,148,136,0.2)}
+.analytics-content{flex:1;max-width:1400px;margin:0 auto;width:100%;padding:20px}
+.ana-panel{display:none}
+.ana-panel.active{display:block}
+/* Report */
+#report-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:20px}
+#report-modal.open{display:flex}
+.report-modal-inner{background:var(--surface);border-radius:var(--rr);max-width:820px;width:100%;max-height:90vh;overflow-y:auto;padding:32px;box-shadow:var(--shadow2)}
+/* Responsive */
+@media(max-width:820px){.two-col{grid-template-columns:1fr}.textarea-grid{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}}
+@media(max-width:500px){.reg-card{padding:24px 16px}.data-card{padding:20px 14px}}
+/* Page Animations */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.reg-card,.data-card{animation:fadeInUp .5s cubic-bezier(.22,1,.36,1)}
+.ana-panel.active{animation:fadeInUp .3s ease}
+.stat-card{transition:transform .15s,box-shadow .15s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(13,148,136,0.12)}
+.nav-tab{transition:all .15s}
+.card{transition:box-shadow .2s}
+
+/* Tooltip */
+[data-tip]{position:relative}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;font-size:11px;padding:4px 8px;border-radius:4px;white-space:nowrap;z-index:100;font-family:'DM Sans',sans-serif}
+/* Batch */
+#batch-results-table-wrap{overflow-x:auto}
+/* EEM */
+#eem-canvas-wrap{position:relative}
+#eem-colorbar{display:flex;flex-direction:column;gap:4px;font-size:11px;font-family:'Space Mono',monospace;color:var(--mu)}
+/* FRET */
+.formula-box{background:#f8fafc;border:1.5px dashed var(--brd2);border-radius:var(--rs);padding:14px;font-family:'Space Mono',monospace;font-size:12px;line-height:1.8;color:var(--mu2)}
+
+@media print {
+  #sticky-header, .nav-tabs-wrap, .btn-primary, .btn-secondary, footer { display:none!important; }
+  .ana-panel { display:block!important; }
+  .card { box-shadow:none; border:1px solid #ccc; }
+  body { background:#fff; }
+}
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: REGISTER -->
+<div id="page-register">
+  <div class="reg-card">
+    <div class="logo-wrap">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+        <circle cx="20" cy="20" r="19" fill="rgba(13,148,136,0.1)" stroke="var(--ac)" stroke-width="1.5"/>
+        <path d="M6 22 Q10 14 14 22 Q18 30 22 18 Q26 6 30 20 Q32 26 34 20" stroke="var(--ac)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <circle cx="20" cy="20" r="3.5" fill="var(--ac)"/>
+      </svg>
+      <div class="logo-text">Fluore<span>sense</span><br><span style="font-size:11px;opacity:.7">ANALYTICS</span></div>
+    </div>
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step active" id="step1-a"><div class="step-num">1</div><span>Register</span></div>
+      <div class="step-line"></div>
+      <div class="step" id="step2-a"><div class="step-num">2</div><span>Data Input</span></div>
+      <div class="step-line"></div>
+      <div class="step" id="step3-a"><div class="step-num">3</div><span>Analytics</span></div>
+    </div>
+    <h2 style="font-size:18px;margin-bottom:4px">Create Account</h2>
+    <p style="color:var(--mu);font-size:13px;margin-bottom:20px">Register to access fluorescence analytics tools</p>
+    <form id="reg-form" novalidate>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="reg-name" placeholder="Bebeto G" required>
+          <div class="err" id="err-name"></div>
+        </div>
+        <div class="form-group">
+          <label>Contact Number *</label>
+          <input type="tel" id="reg-phone" placeholder="8606512587" required>
+          <div class="err" id="err-phone"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Institute / Organisation *</label>
+        <input type="text" id="reg-inst" placeholder="Schrodinger's Student" required>
+        <div class="err" id="err-inst"></div>
+      </div>
+      <div class="form-group">
+        <label>Email *</label>
+        <input type="email" id="reg-email" placeholder="you@university.in" required>
+        <div class="err" id="err-email"></div>
+      </div>
+      <button type="submit" class="btn-primary" style="width:100%;margin-top:4px" id="reg-btn">Register &amp; Continue →</button>
+    </form>
+    <p class="reg-note">ℹ️ Information logged for usage analytics only.</p>
+  </div>
+</div>
+
+<!-- PAGE 2: DATA INPUT -->
+<div id="page-data" style="display:none">
+  <div class="data-card">
+    <div class="logo-wrap" style="margin-bottom:4px">
+      <svg width="32" height="32" viewBox="0 0 40 40" fill="none">
+        <circle cx="20" cy="20" r="19" fill="rgba(13,148,136,0.1)" stroke="var(--ac)" stroke-width="1.5"/>
+        <path d="M6 22 Q10 14 14 22 Q18 30 22 18 Q26 6 30 20 Q32 26 34 20" stroke="var(--ac)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <circle cx="20" cy="20" r="3.5" fill="var(--ac)"/>
+      </svg>
+      <div class="logo-text">Fluore<span>sense</span></div>
+    </div>
+    <div class="stepper">
+      <div class="step done"><div class="step-num">✓</div><span>Register</span></div>
+      <div class="step-line" style="background:#059669"></div>
+      <div class="step active"><div class="step-num">2</div><span>Data Input</span></div>
+      <div class="step-line"></div>
+      <div class="step"><div class="step-num">3</div><span>Analytics</span></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 style="font-size:18px">Data Input</h2>
+      <span id="welcome-name" style="font-size:13px;color:var(--mu)"></span>
+    </div>
+    <div class="mode-label">Sensing Mode</div>
+    <div class="pill-toggle" style="margin-bottom:16px;width:fit-content">
+      <button id="mode-quench" class="active" onclick="setMode('quench')">📉 Quenching</button>
+      <button id="mode-enhance" onclick="setMode('enhance')">📈 Enhancement</button>
+    </div>
+    <div class="textarea-grid">
+      <div>
+        <div class="count-badge-wrap">
+          <label>X-axis (Concentration/wavelength) <span style="color:var(--dg)">*</span></label>
+          <span class="badge muted" id="cnt-x">0</span>
+        </div>
+        <textarea id="inp-x" placeholder="Enter values, one per line&#10;e.g.&#10;0&#10;5&#10;10&#10;20" rows="7" oninput="parseInp('x',this)"></textarea>
+      </div>
+      <div>
+        <div class="count-badge-wrap">
+          <label>Intensity <span style="color:var(--dg)">*</span></label>
+          <span class="badge muted" id="cnt-y">0</span>
+        </div>
+        <textarea id="inp-y" placeholder="Enter values, one per line&#10;e.g.&#10;450&#10;380&#10;310&#10;210" rows="7" oninput="parseInp('y',this)"></textarea>
+      </div>
+      <div>
+        <div class="count-badge-wrap">
+          <label>Peak Wavelength (nm) <span style="color:var(--mu);font-size:11px">(optional)</span></label>
+          <span class="badge muted" id="cnt-wl">0</span>
+        </div>
+        <textarea id="inp-wl" placeholder="e.g.&#10;520&#10;518&#10;519&#10;521" rows="5" oninput="parseInp('wl',this)"></textarea>
+      </div>
+      <div>
+        <div class="count-badge-wrap">
+          <label>FWHM <span style="color:var(--mu);font-size:11px">(optional)</span></label>
+          <span class="badge muted" id="cnt-fw">0</span>
+        </div>
+        <textarea id="inp-fw" placeholder="e.g.&#10;30&#10;31&#10;30&#10;29" rows="5" oninput="parseInp('fw',this)"></textarea>
+      </div>
+      <div style="grid-column:1/-1">
+        <div class="count-badge-wrap">
+          <label>Area Under Curve <span style="color:var(--mu);font-size:11px">(optional)</span></label>
+          <span class="badge muted" id="cnt-auc">0</span>
+        </div>
+        <textarea id="inp-auc" placeholder="Enter AUC values, one per line" rows="3" oninput="parseInp('auc',this)"></textarea>
+      </div>
+    </div>
+    <div id="data-err" class="err" style="margin-top:8px"></div>
+    <p style="font-size:11px;color:var(--mu);margin-top:8px;text-align:center">
+      <kbd>Click below:</kbd> runs the active analysis in the Analytics page
+    </p>
+    <button class="btn-primary" style="width:100%;margin-top:16px" id="go-analytics-btn" disabled onclick="goToAnalytics()">Go to Analytics →</button>
+  </div>
+</div>
+
+<!-- PAGE 3: ANALYTICS -->
+<div id="page-analytics">
+  <!-- Sticky Header -->
+  <div id="sticky-header">
+    <!-- TOP BAR: logo + chips + actions -->
+    <div class="header-top-bar">
+      <div class="header-logo">
+        <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="19" fill="rgba(13,148,136,0.1)" stroke="var(--ac)" stroke-width="1.5"/>
+          <path d="M6 22 Q10 14 14 22 Q18 30 22 18 Q26 6 30 20 Q32 26 34 20" stroke="var(--ac)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+          <circle cx="20" cy="20" r="3.5" fill="var(--ac)"/>
+        </svg>
+        <span class="header-title" id="header-title-text">FLUORESENSE</span>
+      </div>
+      <div style="flex:1"></div>
+      <span class="mode-chip quench" id="mode-chip-hdr">📉 Quenching</span>
+      <div class="user-chip">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--mu)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span id="user-chip-name">User</span>
+      </div>
+      <button class="btn-secondary btn-sm" onclick="goEditData()" style="white-space:nowrap" title="Go back to edit your input data">✏ Edit Data</button>
+      <button class="btn-secondary btn-sm" onclick="logout()" style="white-space:nowrap">Logout</button>
+    </div>
+    <!-- TAB GRID: all 12 tabs visible in a wrapping grid -->
+    <div class="nav-tab-grid" id="nav-tabs">
+      <button class="nav-tab active" onclick="showTab(0)">⚗ Generator</button>
+      <button class="nav-tab" onclick="showTab(1)">〰 GPR</button>
+      <button class="nav-tab" onclick="showTab(2)">◈ Multi-Analyte</button>
+      <button class="nav-tab" onclick="showTab(3)">◎ Predictive</button>
+      <button class="nav-tab" onclick="showTab(4)">⬡ EEM</button>
+      <button class="nav-tab" onclick="showTab(5)">⇥ Batch</button>
+      <button class="nav-tab" onclick="showTab(6)">🎯 Selectivity</button>
+      <button class="nav-tab" onclick="showTab(7)">⚡ Interference</button>
+      <button class="nav-tab" onclick="showTab(8)">📐 Adv. Calcs</button>
+      <button class="nav-tab" onclick="showTab(9)">🔒 Stability</button>
+      <button class="nav-tab" onclick="showTab(10)">🔬 FRET</button>
+      <button class="nav-tab" onclick="showTab(11)">📊 Report</button>
+    </div>
+  </div>
+
+  <div class="analytics-content">
+    <!-- TAB 0: GENERATOR -->
+    <div class="ana-panel active" id="panel-0">
+      <div class="two-col">
+        <div class="panel-left">
+          <div class="card">
+            <div class="section-title">Input Data</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+              <div>
+                <div class="count-badge-wrap"><label>X (Concentration)</label><span class="badge muted" id="gen-cnt-x">0</span></div>
+                <textarea id="gen-x" rows="6" placeholder="One value per line" oninput="cntTA('gen-x','gen-cnt-x')"></textarea>
+              </div>
+              <div>
+                <div class="count-badge-wrap"><label>Y (Intensity)</label><span class="badge muted" id="gen-cnt-y">0</span></div>
+                <textarea id="gen-y" rows="6" placeholder="One value per line" oninput="cntTA('gen-y','gen-cnt-y')"></textarea>
+              </div>
+            </div>
+            <div class="section-title" style="margin-top:4px">Settings</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div><label>X-axis Label</label><input id="gen-xlabel" value="Concentration (μM)"></div>
+              <div><label>Y-axis Label</label><input id="gen-ylabel" value="Intensity (a.u.)"></div>
+              <div>
+                <label>Ratio Type</label>
+                <select id="gen-ratio"><option value="f0f">F₀/F</option><option value="dff0">ΔF/F₀</option></select>
+              </div>
+              <div><label>Synthetic Points</label><input type="number" id="gen-npts" value="150" min="20" max="500"></div>
+            </div>
+            <div style="margin-top:10px">
+              <label>Noise Level: <span id="gen-noise-val">3</span>%</label>
+              <input type="range" id="gen-noise" min="0" max="20" value="3" style="padding:0;border:none;box-shadow:none;height:4px;accent-color:var(--ac)" oninput="document.getElementById('gen-noise-val').textContent=this.value">
+            </div>
+            <div style="display:flex;gap:8px;margin-top:14px">
+              <button class="btn-secondary btn-sm" onclick="clearGen()">Clear</button>
+              <button class="btn-primary" onclick="runGenerator()">Fit &amp; Generate →</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel-right hidden" id="gen-right">
+          <div class="card">
+            <div class="stat-grid" id="gen-stats"></div>
+          </div>
+          <div class="card">
+            <div class="section-title">Intensity vs Analyte</div>
+            <div class="chart-wrap"><canvas id="gen-chart1"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="section-title" id="gen-chart2-title">F₀/F vs Analyte</div>
+            <div class="chart-wrap"><canvas id="gen-chart2"></canvas></div>
+          </div>
+          <div class="export-row">
+            <button class="btn-secondary btn-sm" onclick="exportGenCSV()">Copy CSV</button>
+            <button class="btn-secondary btn-sm" onclick="exportPNG('gen-chart1','gen_intensity')">PNG Chart 1</button>
+            <button class="btn-secondary btn-sm" onclick="exportPNG('gen-chart2','gen_ratio')">PNG Chart 2</button>
+          </div>
+        </div>
+        <div id="gen-empty" class="panel-right" style="align-items:center;justify-content:center">
+          <div class="empty-state">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><path d="M15 35 Q22 20 30 35 Q38 50 45 28" stroke="var(--brd2)" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+            <p>Paste X and Y data, configure settings, then click <strong>Fit &amp; Generate</strong> to see synthetic data and fit statistics.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 1: GPR -->
+    <div class="ana-panel" id="panel-1">
+      <div class="two-col">
+        <div class="panel-left">
+          <div class="card">
+            <div class="section-title">GPR Input</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+              <div><div class="count-badge-wrap"><label>X</label><span class="badge muted" id="gpr-cnt-x">0</span></div><textarea id="gpr-x" rows="6" placeholder="Concentration" oninput="cntTA('gpr-x','gpr-cnt-x')"></textarea></div>
+              <div><div class="count-badge-wrap"><label>Y</label><span class="badge muted" id="gpr-cnt-y">0</span></div><textarea id="gpr-y" rows="6" placeholder="Intensity" oninput="cntTA('gpr-y','gpr-cnt-y')"></textarea></div>
+            </div>
+            <div class="section-title">Kernel Parameters <span style="font-size:10px;font-weight:400">(0 = auto)</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+              <div><label>Length ℓ</label><input type="number" id="gpr-l" value="0" step="0.1" min="0"></div>
+              <div><label>σ²f</label><input type="number" id="gpr-sf" value="0" step="0.1" min="0"></div>
+              <div><label>σ²n</label><input type="number" id="gpr-sn" value="0" step="0.01" min="0"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+              <div><label>Pred. Points</label><input type="number" id="gpr-npts" value="120" min="20"></div>
+              <div><label>X Label</label><input id="gpr-xlabel" value="Concentration (μM)"></div>
+            </div>
+            <button class="btn-primary" onclick="runGPR()">Run GPR →</button>
+          </div>
+        </div>
+        <div class="panel-right hidden" id="gpr-right">
+          <div class="info-box">GPR fits a Gaussian process with RBF kernel. The shaded band shows the 95% credible interval. Narrow bands indicate high confidence regions.</div>
+          <div class="stat-grid" id="gpr-stats"></div>
+          <div class="card"><div class="section-title">GPR Mean + 95% CI</div><div class="chart-wrap"><canvas id="gpr-chart1"></canvas></div></div>
+          <div class="card"><div class="section-title">Predictive Uncertainty σ</div><div class="chart-wrap"><canvas id="gpr-chart2"></canvas></div></div>
+          <div class="export-row">
+            <button class="btn-secondary btn-sm" onclick="exportPNG('gpr-chart1','gpr_mean')">PNG Chart 1</button>
+            <button class="btn-secondary btn-sm" onclick="exportPNG('gpr-chart2','gpr_uncertainty')">PNG Chart 2</button>
+          </div>
+        </div>
+        <div id="gpr-empty" class="panel-right" style="align-items:center;justify-content:center">
+          <div class="empty-state">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><ellipse cx="30" cy="30" rx="14" ry="20" stroke="var(--brd2)" stroke-width="2" stroke-dasharray="4 3"/></svg>
+            <p>Paste data and run GPR to see the posterior distribution with confidence intervals.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: MULTI-ANALYTE -->
+    <div class="ana-panel" id="panel-2">
+      <div class="two-col">
+        <div class="panel-left">
+          <div class="card">
+            <div class="section-title">Analyte Slots <span class="badge muted" id="ma-count-badge">0 / 6</span></div>
+            <div id="ma-slots" style="display:flex;flex-direction:column;gap:8px"></div>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <button class="btn-secondary btn-sm" id="ma-add-btn" onclick="addMASlot()">+ Add Analyte</button>
+              <button class="btn-secondary btn-sm" onclick="clearMASlots()">Clear All</button>
+              <button class="btn-primary" onclick="runMA()">Discriminate →</button>
+            </div>
+          </div>
+          <div id="ma-feature-table" class="card" style="display:none">
+            <div class="section-title">Feature Table</div>
+            <div id="ma-feature-content"></div>
+          </div>
+        </div>
+        <div class="panel-right hidden" id="ma-right">
+          <div class="card"><div class="section-title">Quenching Fingerprint Radar</div><div class="chart-wrap"><canvas id="ma-chart-radar"></canvas></div></div>
+          <div class="card"><div class="section-title">Intensity vs Concentration</div><div class="chart-wrap"><canvas id="ma-chart-int"></canvas></div></div>
+          <div class="card"><div class="section-title">Stern-Völmer F₀/F</div><div class="chart-wrap"><canvas id="ma-chart-sv"></canvas></div></div>
+          <div class="card"><div class="section-title">Ksv Comparison</div><div class="chart-wrap"><canvas id="ma-chart-ksv"></canvas></div></div>
+          <div class="card" id="ma-disc-matrix"><div class="section-title">Discrimination Matrix</div><div id="ma-matrix-content"></div></div>
+          <div class="export-row">
+            <button class="btn-secondary btn-sm" onclick="exportPNG('ma-chart-radar','ma_radar')">PNG Radar</button>
+            <button class="btn-secondary btn-sm" onclick="exportPNG('ma-chart-int','ma_intensity')">PNG Intensity</button>
+          </div>
+        </div>
+        <div id="ma-empty" class="panel-right" style="align-items:center;justify-content:center">
+          <div class="empty-state">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><polygon points="30,10 50,45 10,45" stroke="var(--brd2)" stroke-width="2" fill="none"/><polygon points="30,18 44,42 16,42" stroke="var(--brd2)" stroke-width="2" fill="none"/></svg>
+            <p>Add up to 6 analytes with X and Y data, then click <strong>Discriminate</strong> to compare selectivity patterns.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: PREDICTIVE -->
+    <div class="ana-panel" id="panel-3">
+      <div class="two-col">
+        <div class="panel-left">
+          <div class="card">
+            <div class="section-title">Training Data</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+              <div><div class="count-badge-wrap"><label>X (Training)</label><span class="badge muted" id="pred-cnt-x">0</span></div><textarea id="pred-x" rows="6" placeholder="Concentration" oninput="cntTA('pred-x','pred-cnt-x')"></textarea></div>
+              <div><div class="count-badge-wrap"><label>Y (Training)</label><span class="badge muted" id="pred-cnt-y">0</span></div><textarea id="pred-y" rows="6" placeholder="Intensity" oninput="cntTA('pred-y','pred-cnt-y')"></textarea></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+              <div><label>Model Type</label><select id="pred-model"><option value="gpr">GPR</option><option value="poly2">Poly2</option><option value="linear">Linear</option><option value="sv">Stern-Völmer</option></select></div>
+              <div><label>Ratio Type</label><select id="pred-ratio"><option value="f0f">F₀/F</option><option value="dff0">ΔF/F₀</option></select></div>
+              <div><label>Confidence</label><select id="pred-conf"><option value="90">90%</option><option value="95" selected>95%</option><option value="99">99%</option></select></div>
+              <div><label>Query Concentration</label><input type="number" id="pred-query" placeholder="e.g. 15"></div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn-primary" onclick="runPredictive()">Build Model →</button>
+              <button class="btn-secondary" onclick="runPrediction()">Predict ↗</button>
+            </div>
+            <div id="pred-result-box" style="display:none;margin-top:12px" class="info-box"></div>
+          </div>
+        </div>
+        <div class="panel-right hidden" id="pred-right">
+          <div class="stat-grid" id="pred-stats"></div>
+          <div class="card"><div class="section-title">Model Fit + PI</div><div class="chart-wrap"><canvas id="pred-chart1"></canvas></div></div>
+          <div class="card"><div class="section-title">Residuals</div><div class="chart-wrap"><canvas id="pred-chart2"></canvas></div></div>
+          <div class="card"><div class="section-title">Stern-Völmer</div><div class="chart-wrap"><canvas id="pred-chart3"></canvas></div></div>
+          <div class="export-row">
+            <button class="btn-secondary btn-sm" onclick="exportPNG('pred-chart1','pred_fit')">PNG Fit</button>
+          </div>
+        </div>
+        <div id="pred-empty" class="panel-right" style="align-items:center;justify-content:center">
+          <div class="empty-state">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><path d="M15 40 L28 22 L36 30 L46 18" stroke="var(--brd2)" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+            <p>Enter training data, select model, and click <strong>Build Model</strong> to fit and predict.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: EEM -->
+    <div class="ana-panel" id="panel-4">
+      <div class="two-col">
+        <div class="panel-left">
+          <div class="card">
+            <div class="section-title">EEM Data</div>
+            <p style="font-size:12px;color:var(--mu);margin-bottom:8px">Row 1 = emission nm (col headers), Col 1 = excitation nm, cells = fluorescence intensity</p>
+            <textarea id="eem-data" rows="10" placeholder="ex\t300\t310\t320...&#10;250\t12\t45\t87...&#10;260\t18\t52\t93..."></textarea>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+              <div><label>Colour Scheme</label><select id="eem-cmap"><option>Jet</option><option>Hot</option><option>Viridis</option><option>Plasma</option><option>Cool</option></select></div>
+              <div><label>Interpolation</label><select id="eem-interp"><option value="1">None</option><option value="3">3×</option><option value="5">5×</option></select></div>
+              <div><label>Min Clip</label><input type="number" id="eem-min" placeholder="auto"></div>
+              <div><label>Max Clip</label><input type="number" id="eem-max" placeholder="auto"></div>
+            </div>
+            <button class="btn-primary" style="margin-top:12px" onclick="renderEEM()">Render EEM →</button>
+          </div>
+        </div>
+        <div class="panel-right hidden" id="eem-right">
+          <div class="card">
+            <div class="section-title">EEM Heatmap</div>
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <canvas id="eem-canvas" width="400" height="300" style="border:1px solid var(--brd);border-radius:4px;image-rendering:pixelated;max-width:100%"></canvas>
+              <div id="eem-colorbar" style="width:30px"></div>
+            </div>
+            <div style="margin-top:10px">
+              <span class="stat-card" style="display:inline-flex;gap:8px;align-items:center;padding:8px 12px">
+                <span style="font-size:11px;color:var(--mu);font-family:'Space Mono',monospace">PEAK FLUORESCENCE</span>
+                <span id="eem-peak-val" style="font-family:'Space Mono',monospace;font-weight:700;color:var(--ac)">—</span>
+              </span>
+            </div>
+          </div>
+          <div class="export-row">
+            <button class="btn-secondary btn-sm" onclick="exportEEMPNG()">Download PNG</button>
+          </div>
+        </div>
+        <div id="eem-empty" class="panel-right" style="align-items:center;justify-content:center">
+          <div class="empty-state">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><rect x="16" y="16" width="28" height="28" rx="4" stroke="var(--brd2)" stroke-width="2" fill="none"/><circle cx="26" cy="26" r="4" fill="var(--brd2)"/></svg>
+            <p>Paste EEM matrix data and click <strong>Render EEM</strong> to generate the heatmap.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: BATCH -->
+    <div class="ana-panel" id="panel-5">
+      <div class="two-col">
+        <div class="panel-left">
+          <div class="card">
+            <div class="section-title">Batch Data</div>
+            <div class="info-box" style="margin-bottom:10px">Separate datasets with blank lines. First line of each block can be a name (non-numeric).</div>
+            <textarea id="batch-data" rows="12" placeholder="Sample1&#10;0 450&#10;5 380&#10;10 310&#10;&#10;Sample2&#10;0 500&#10;5 420&#10;10 340"></textarea>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+              <div><label>Sample Name Prefix</label><input id="batch-prefix" value="Sample"></div>
+              <div><label>Model Type</label><select id="batch-model"><option>Linear</option><option>Poly2</option><option>Stern-Völmer</option></select></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="btn-primary" onclick="runBatch()">Run Batch →</button>
+              <button class="btn-secondary btn-sm" onclick="document.getElementById('batch-data').value=''">Clear</button>
+            </div>
+            <div id="batch-preview" class="info-box" style="margin-top:10px;display:none"></div>
+          </div>
+        </div>
+        <div class="panel-right hidden" id="batch-right">
+          <div class="card">
+            <div class="section-title">Batch Results</div>
+            <div id="batch-results-table-wrap"></div>
+          </div>
+          <div class="card"><div class="section-title">Ksv Comparison</div><div class="chart-wrap"><canvas id="batch-chart"></canvas></div></div>
+          <div class="export-row">
+            <button class="btn-secondary btn-sm" onclick="exportBatchCSV()">Export CSV</button>
+            <button class="btn-secondary btn-sm" onclick="exportPNG('batch-chart','batch_ksv')">PNG Chart</button>
+          </div>
+        </div>
+        <div id="batch-empty" class="panel-right" style="align-items:center;justify-content:center">
+          <div class="empty-state">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><rect x="14" y="18" width="32" height="8" rx="3" stroke="var(--brd2)" stroke-width="2" fill="none"/><rect x="14" y="30" width="24" height="8" rx="3" stroke="var(--brd2)" stroke-width="2" fill="none"/></svg>
+            <p>Paste multiple datasets separated by blank lines, then click <strong>Run Batch</strong>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: SELECTIVITY -->
+    <div class="ana-panel" id="panel-6">
+      <div class="two-col">
+        <div class="panel-left">
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div class="section-title">Analyte Slots</div>
+              <span class="badge muted" id="sel-count">0 / 15</span>
+            </div>
+            <div id="sel-slots" style="display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto;padding-right:4px"></div>
+            <button class="btn-secondary btn-sm" style="margin-top:8px" id="sel-add-btn" onclick="addSelSlot()">+ Add Analyte</button>
+            <hr class="divider" style="margin:12px 0">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div><label>Probe Name</label><input id="sel-probe" placeholder="Probe A"></div>
+              <div><label>X-axis Label</label><input id="sel-xlabel" value="Analyte"></div>
+              <div><label>Ratio Type</label>
+                <select id="sel-ratio"><option value="f0f">F₀/F</option><option value="dff0">ΔF/F₀</option><option value="ff0">F/F₀</option></select>
+              </div>
+              <div><label>Target Analyte Name</label><input id="sel-target" placeholder="Ion A (highlight)"></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="btn-secondary btn-sm" onclick="clearSelSlots()">Clear All</button>
+              <button class="btn-primary" onclick="runSelectivity()">Run Selectivity →</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel-right hidden" id="sel-right">
+          <div class="info-box">Selectivity bar chart shows the fluorescence response ratio for each analyte vs the target. Higher discrimination = better selectivity.</div>
+          <div class="stat-grid" id="sel-stats"></div>
+          <div class="card"><div class="section-title">Selectivity Bar Chart</div><div class="chart-wrap"><canvas id="sel-chart1"></canvas></div></div>
+          <div class="card"><div class="section-title">Normalised Selectivity Heatmap</div><canvas id="sel-heatmap" height="80"></canvas></div>
+          <div class="card"><div class="section-title">Results Table</div><div id="sel-table"></div></div>
+          <div class="export-row">
+            <button class="btn-secondary btn-sm" onclick="exportSelCSV()">Copy CSV</button>
+            <button class="btn-secondary btn-sm" onclick="exportPNG('sel-chart1','sel_bar')">PNG Chart</button>
+          </div>
+        </div>
+        <div id="sel-empty" class="panel-right" style="align-items:center;justify-content:center">
+          <div class="empty-state">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><rect x="14" y="20" width="8" height="22" rx="2" stroke="var(--brd2)" stroke-width="2" fill="none"/><rect x="26" y="28" width="8" height="14" rx="2" stroke="var(--brd2)" stroke-width="2" fill="none"/><rect x="38" y="14" width="8" height="28" rx="2" stroke="var(--brd2)" stroke-width="2" fill="none"/></svg>
+            <p>Add analyte slots with F₀, F, and concentration data, then run selectivity analysis.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 7: INTERFERENCE -->
+    <div class="ana-panel" id="panel-7">
+      <div class="two-col">
+        <div class="panel-left">
+          <div class="card">
+            <div class="section-title">Target Analyte</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+              <div><label>Name</label><input id="int-target-name" placeholder="Analyte A"></div>
+              <div><label>Concentration (μM)</label><input type="number" id="int-target-conc" placeholder="10"></div>
+              <div><label>F₀ (Blank)</label><input type="number" id="int-f0" placeholder="500"></div>
+              <div><label>F (Analyte alone)</label><input type="number" id="int-f-alone" placeholder="200"></div>
+            </div>
+            <hr class="divider">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0">
+              <div class="section-title">Interfering Agents</div>
+              <span class="badge muted" id="int-count">0 / 15</span>
+            </div>
+            <div id="int-slots" style="display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto;padding-right:4px"></div>
+            <button class="btn-secondary btn-sm" style="margin-top:8px" id="int-add-btn" onclick="addIntSlot()">+ Add Interferent</button>
+            <hr class="divider" style="margin:10px 0">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div><label>Ratio Type</label><select id="int-ratio"><option value="f0f">F₀/F</option><option value="dff0">ΔF/F₀</option></select></div>
+              <div style="display:flex;align-items:flex-end;gap:6px;padding-bottom:2px">
+                <label style="margin:0">Normalise to target</label>
+                <input type="checkbox" id="int-normalise" checked style="width:auto;height:16px;accent-color:var(--ac)">
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="btn-secondary btn-sm" onclick="clearIntSlots()">Clear</button>
+              <button class="btn-primary" onclick="runInterference()">Run Interference →</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel-right hidden" id="int-right">
+          <div class="info-box">Interference ratio = (F<sub>analyte+interferent</sub> − F₀) / (F<sub>analyte</sub> − F₀). Values near 1.0 indicate negligible interference.</div>
+          <div class="stat-grid" id="int-stats"></div>
+          <div class="card"><div class="section-title">Interference Bar Chart</div><div class="chart-wrap"><canvas id="int-chart1"></canvas></div></div>
+          <div class="card"><div class="section-title">Interferent Conc. vs Ratio</div><div class="chart-wrap"><canvas id="int-chart2"></canvas></div></div>
+          <div class="card"><div class="section-title">Deviation from Ideal (%)</div><div class="chart-wrap"><canvas id="int-chart3"></canvas></div></div>
+          <div class="card"><div class="section-title">Results Table</div><div id="int-table"></div></div>
+          <div class="export-row">
+            <button class="btn-secondary btn-sm" onclick="exportIntCSV()">Copy CSV</button>
+            <button class="btn-secondary btn-sm" onclick="exportPNG('int-chart1','int_bar')">PNG Chart</button>
+          </div>
+        </div>
+        <div id="int-empty" class="panel-right" style="align-items:center;justify-content:center">
+          <div class="empty-state">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><path d="M20 40 L20 20 M28 40 L28 26 M36 40 L36 18 M44 40 L44 30" stroke="var(--brd2)" stroke-width="2.5" fill="none" stroke-linecap="round"/><line x1="14" y1="40" x2="50" y2="40" stroke="var(--brd2)" stroke-width="2"/></svg>
+            <p>Define target analyte, add interfering agents, then run interference analysis.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 8: ADVANCED CALCS -->
+    <div class="ana-panel" id="panel-8">
+      <div class="sub-tabs" id="adv-subtabs">
+        <button class="sub-tab-btn active" onclick="showAdvSub(0)">SV</button>
+        <button class="sub-tab-btn" onclick="showAdvSub(1)">BH</button>
+        <button class="sub-tab-btn" onclick="showAdvSub(2)">LOD/LOQ</button>
+        <button class="sub-tab-btn" onclick="showAdvSub(3)">Binding Constant</button>
+        <button class="sub-tab-btn" onclick="showAdvSub(4)">Titration Builder</button>
+      </div>
+      <!-- SV -->
+      <div class="adv-sub active" id="advsub-0">
+        <div class="two-col">
+          <div class="panel-left">
+            <div class="card">
+              <div class="section-title">Stern-Völmer Analysis</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                <div><div class="count-badge-wrap"><label>X (Concentration)</label><span class="badge muted" id="sv-cnt-x">0</span></div><textarea id="sv-x" rows="6" placeholder="Concentration" oninput="cntTA('sv-x','sv-cnt-x')"></textarea></div>
+                <div><div class="count-badge-wrap"><label>Y (F₀/F or I)</label><span class="badge muted" id="sv-cnt-y">0</span></div><textarea id="sv-y" rows="6" placeholder="Intensity or F₀/F" oninput="cntTA('sv-y','sv-cnt-y')"></textarea></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                <div><label>F₀</label><input type="number" id="sv-f0" placeholder="Blank intensity"></div>
+                <div><label>Ksv Initial Guess</label><input type="number" id="sv-ksv0" placeholder="0.1"></div>
+                <div><label>Model</label><select id="sv-model"><option value="linear">Linear SV</option><option value="modified">Modified SV</option><option value="bimodal">Bimodal SV</option></select></div>
+                <div><label>τ₀ (ns)</label><input type="number" id="sv-tau" value="10"></div>
+              </div>
+              <button class="btn-primary" onclick="runSV()">Run SV →</button>
+            </div>
+          </div>
+          <div class="panel-right hidden" id="sv-right">
+            <div class="stat-grid" id="sv-stats"></div>
+            <div class="info-box" id="sv-interp"></div>
+            <div class="card"><div class="section-title">SV Plot</div><div class="chart-wrap"><canvas id="sv-chart1"></canvas></div></div>
+            <div class="export-row"><button class="btn-secondary btn-sm" onclick="exportPNG('sv-chart1','sv_plot')">PNG</button></div>
+          </div>
+          <div id="sv-empty" class="panel-right" style="align-items:center;justify-content:center">
+            <div class="empty-state"><svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><path d="M14 42 Q22 20 46 18" stroke="var(--brd2)" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg><p>Paste SV data and run analysis to compute Ksv and quenching type.</p></div>
+          </div>
+        </div>
+      </div>
+      <!-- BH -->
+      <div class="adv-sub" id="advsub-1" style="display:none">
+        <div class="two-col">
+          <div class="panel-left">
+            <div class="card">
+              <div class="section-title">Benesi-Hildebrand</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                <div><div class="count-badge-wrap"><label>[Host] or [Guest]</label><span class="badge muted" id="bh-cnt-h">0</span></div><textarea id="bh-h" rows="6" placeholder="[H] values" oninput="cntTA('bh-h','bh-cnt-h')"></textarea></div>
+                <div><div class="count-badge-wrap"><label>ΔF or F</label><span class="badge muted" id="bh-cnt-f">0</span></div><textarea id="bh-f" rows="6" placeholder="ΔF values" oninput="cntTA('bh-f','bh-cnt-f')"></textarea></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                <div><label>BH Model</label><select id="bh-model"><option value="1:1">1:1</option><option value="1:2">1:2</option><option value="2:1">2:1</option></select></div>
+                <div><label>F₀ (Blank)</label><input type="number" id="bh-f0" placeholder="Blank F"></div>
+              </div>
+              <button class="btn-primary" onclick="runBH()">Run BH →</button>
+            </div>
+          </div>
+          <div class="panel-right hidden" id="bh-right">
+            <div class="stat-grid" id="bh-stats"></div>
+            <div class="card"><div class="section-title">BH Linearisation Plot</div><div class="chart-wrap"><canvas id="bh-chart1"></canvas></div></div>
+            <div class="card"><div class="section-title">Binding Isotherm</div><div class="chart-wrap"><canvas id="bh-chart2"></canvas></div></div>
+            <div class="export-row"><button class="btn-secondary btn-sm" onclick="exportPNG('bh-chart1','bh_plot')">PNG</button></div>
+          </div>
+          <div id="bh-empty" class="panel-right" style="align-items:center;justify-content:center">
+            <div class="empty-state"><svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><path d="M14 40 L20 20 L28 32 L36 22 L46 14" stroke="var(--brd2)" stroke-width="2" fill="none" stroke-linecap="round"/></svg><p>Paste host and ΔF data to compute binding constants via BH analysis.</p></div>
+          </div>
+        </div>
+      </div>
+      <!-- LOD/LOQ -->
+      <div class="adv-sub" id="advsub-2" style="display:none">
+        <div class="two-col">
+          <div class="panel-left">
+            <div class="card">
+              <div class="section-title">Blank Measurements</div>
+              <div id="lod-blanks" style="display:flex;flex-direction:column;gap:8px"></div>
+              <button class="btn-secondary btn-sm" style="margin-top:8px" onclick="addLODBlank()">+ Add Blank</button>
+              <hr class="divider" style="margin:12px 0">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                <div><label>Slope Source</label><select id="lod-slope-src"><option value="manual">Manual Entry</option><option value="tab1">Use Tab 1 Slope</option><option value="sv">Use Tab 9A Ksv</option></select></div>
+                <div><label>Slope</label><input type="number" id="lod-slope" placeholder="e.g. 12.5"></div>
+                <div><label>Concentration Unit</label><select id="lod-unit"><option>μM</option><option>nM</option><option>mM</option><option>ppm</option><option>ppb</option></select></div>
+              </div>
+              <button class="btn-primary" onclick="runLOD()">Calculate →</button>
+            </div>
+          </div>
+          <div class="panel-right hidden" id="lod-right">
+            <div class="stat-grid" id="lod-stats"></div>
+            <div class="card">
+              <div class="section-title">Calculation Breakdown</div>
+              <div id="lod-breakdown"></div>
+            </div>
+            <div class="info-box">LOD and LOQ are valid only within the linear range of the calibration.</div>
+            <div class="export-row"><button class="btn-secondary btn-sm" onclick="copyLOD()">Copy Values</button></div>
+          </div>
+          <div id="lod-empty" class="panel-right" style="align-items:center;justify-content:center">
+            <div class="empty-state"><svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><line x1="30" y1="10" x2="30" y2="50" stroke="var(--brd2)" stroke-width="2" stroke-dasharray="4"/><line x1="10" y1="30" x2="50" y2="30" stroke="var(--brd2)" stroke-width="2" stroke-dasharray="4"/></svg><p>Add blank measurements and enter slope to calculate LOD/LOQ.</p></div>
+          </div>
+        </div>
+      </div>
+      <!-- Binding Constant -->
+      <div class="adv-sub" id="advsub-3" style="display:none">
+        <div class="two-col">
+          <div class="panel-left">
+            <div class="card">
+              <div class="section-title">Titration Datasets</div>
+              <div id="bc-datasets" style="display:flex;flex-direction:column;gap:10px"></div>
+              <button class="btn-secondary btn-sm" style="margin-top:8px" onclick="addBCDataset()">+ Add Dataset</button>
+              <hr class="divider" style="margin:10px 0">
+              <div><label>Binding Model</label>
+                <select id="bc-model"><option value="langmuir">1:1 Langmuir</option><option value="hill">Hill</option><option value="bh">BH Linear</option></select>
+              </div>
+              <button class="btn-primary" style="margin-top:10px" onclick="runBC()">Run All →</button>
+            </div>
+          </div>
+          <div class="panel-right hidden" id="bc-right">
+            <div class="stat-grid" id="bc-stats"></div>
+            <div class="card"><div class="section-title">Binding Isotherms Overlay</div><div class="chart-wrap"><canvas id="bc-chart1"></canvas></div></div>
+            <div class="card"><div class="section-title">Summary Table</div><div id="bc-table"></div></div>
+            <div class="export-row"><button class="btn-secondary btn-sm" onclick="exportPNG('bc-chart1','bc_isotherms')">PNG</button></div>
+          </div>
+          <div id="bc-empty" class="panel-right" style="align-items:center;justify-content:center">
+            <div class="empty-state"><svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><path d="M12 42 Q16 20 40 18 Q46 17 48 22" stroke="var(--brd2)" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg><p>Add titration datasets and select a binding model to compute Ka.</p></div>
+          </div>
+        </div>
+      </div>
+      <!-- Titration Builder -->
+      <div class="adv-sub" id="advsub-4" style="display:none">
+        <div class="two-col">
+          <div class="panel-left">
+            <div class="card">
+              <div class="section-title">Titration Series <span class="badge muted" id="tit-count">0/6</span></div>
+              <div id="tit-slots" style="display:flex;flex-direction:column;gap:10px"></div>
+              <button class="btn-secondary btn-sm" style="margin-top:8px" id="tit-add-btn" onclick="addTitSlot()">+ Add Series</button>
+              <hr class="divider" style="margin:10px 0">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div><label>X Label</label><input id="tit-xlabel" value="Volume (mL)"></div>
+                <div><label>Y Label</label><input id="tit-ylabel" value="Intensity (a.u.)"></div>
+                <div><label>Chart Title</label><input id="tit-title" value="Fluorescence Titration"></div>
+                <div><label>Legend Position</label><select id="tit-legend"><option>top</option><option>bottom</option><option>right</option></select></div>
+              </div>
+              <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap">
+                <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif"><input type="checkbox" id="tit-pts" checked style="width:auto;accent-color:var(--ac)"> Show points</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif"><input type="checkbox" id="tit-smooth" style="width:auto;accent-color:var(--ac)"> Smooth line</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif"><input type="checkbox" id="tit-norm" style="width:auto;accent-color:var(--ac)"> Normalise to F₀</label>
+              </div>
+              <button class="btn-primary" style="margin-top:12px" onclick="runTitration()">Run →</button>
+            </div>
+          </div>
+          <div class="panel-right hidden" id="tit-right">
+            <div class="card"><div class="section-title" id="tit-chart-title">Titration Chart</div><div class="chart-wrap"><canvas id="tit-chart-main"></canvas></div></div>
+            <div id="tit-mini-charts" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
+            <div class="card"><div class="section-title">Titration Summary</div><div id="tit-table"></div></div>
+            <div class="export-row"><button class="btn-secondary btn-sm" onclick="exportPNG('tit-chart-main','titration_chart')">PNG</button><button class="btn-secondary btn-sm" onclick="exportTitCSV()">CSV</button></div>
+          </div>
+          <div id="tit-empty" class="panel-right" style="align-items:center;justify-content:center">
+            <div class="empty-state"><svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><path d="M14 38 Q20 26 26 32 Q32 38 38 24 Q42 14 46 20" stroke="var(--brd2)" stroke-width="2" fill="none" stroke-linecap="round"/></svg><p>Add titration series and run to build overlaid titration charts.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 9: STABILITY -->
+    <div class="ana-panel" id="panel-9">
+      <div class="two-col">
+        <div class="panel-left">
+          <div class="card">
+            <div class="section-title">Study Type</div>
+            <div class="pill-toggle" style="margin-bottom:14px;width:fit-content">
+              <button id="stab-time-btn" class="active" onclick="setStabMode('time')">Time-based</button>
+              <button id="stab-cond-btn" onclick="setStabMode('cond')">Condition-based</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+              <div class="card" style="padding:14px;border-color:var(--ac);background:rgba(13,148,136,0.03)">
+                <div class="section-title" style="color:var(--ac)">Slot A — Probe alone</div>
+                <div><label>Label</label><input id="stab-a-label" value="Probe alone"></div>
+                <div style="margin-top:8px"><div class="count-badge-wrap"><label>X</label><span class="badge muted" id="stab-cnt-ax">0</span></div><textarea id="stab-a-x" rows="5" placeholder="Time / Condition values" oninput="cntTA('stab-a-x','stab-cnt-ax')"></textarea></div>
+                <div style="margin-top:8px"><div class="count-badge-wrap"><label>Y (Intensity)</label><span class="badge muted" id="stab-cnt-ay">0</span></div><textarea id="stab-a-y" rows="5" placeholder="Intensity values" oninput="cntTA('stab-a-y','stab-cnt-ay')"></textarea></div>
+              </div>
+              <div class="card" style="padding:14px;border-color:var(--ac4);background:rgba(234,108,0,0.03)">
+                <div class="section-title" style="color:var(--ac4)">Slot B — Probe + Analyte</div>
+                <div><label>Label</label><input id="stab-b-label" value="Probe + Analyte"></div>
+                <div style="margin-top:8px"><div class="count-badge-wrap"><label>X</label><span class="badge muted" id="stab-cnt-bx">0</span></div><textarea id="stab-b-x" rows="5" placeholder="Time / Condition values" oninput="cntTA('stab-b-x','stab-cnt-bx')"></textarea></div>
+                <div style="margin-top:8px"><div class="count-badge-wrap"><label>Y (Intensity)</label><span class="badge muted" id="stab-cnt-by">0</span></div><textarea id="stab-b-y" rows="5" placeholder="Intensity values" oninput="cntTA('stab-b-y','stab-cnt-by')"></textarea></div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+              <div><label>X-axis Label</label><input id="stab-xlabel" value="Time (days)"></div>
+              <div><label>Y-axis Label</label><input id="stab-ylabel" value="Relative Intensity (%)"></div>
+              <div><label>Threshold (%)</label><input type="number" id="stab-thresh" value="90" min="0" max="100"></div>
+              <div style="display:flex;align-items:flex-end;gap:6px;padding-bottom:2px">
+                <label style="margin:0">Normalise to I₀</label>
+                <input type="checkbox" id="stab-norm" checked style="width:auto;height:16px;accent-color:var(--ac)">
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn-secondary btn-sm" onclick="clearStab()">Clear</button>
+              <button class="btn-primary" onclick="runStability()">Run Stability →</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel-right hidden" id="stab-right">
+          <div class="stat-grid" id="stab-stats"></div>
+          <div class="card"><div class="section-title">Stability Overlay</div><div class="chart-wrap"><canvas id="stab-chart1"></canvas></div></div>
+          <div class="card"><div class="section-title">Relative Change (%)</div><div class="chart-wrap"><canvas id="stab-chart2"></canvas></div></div>
+          <div class="card"><div class="section-title">Data Table</div><div id="stab-table" style="overflow-x:auto"></div></div>
+          <div class="info-box" id="stab-interp"></div>
+          <div class="export-row">
+            <button class="btn-secondary btn-sm" onclick="exportPNG('stab-chart1','stability')">PNG Chart</button>
+            <button class="btn-secondary btn-sm" onclick="exportStabCSV()">CSV</button>
+          </div>
+        </div>
+        <div id="stab-empty" class="panel-right" style="align-items:center;justify-content:center">
+          <div class="empty-state"><svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><path d="M12 30 Q20 20 30 28 Q40 36 48 26" stroke="var(--brd2)" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M12 36 Q20 28 30 34 Q40 40 48 32" stroke="var(--brd2)" stroke-width="1.5" fill="none" stroke-dasharray="4 3" stroke-linecap="round"/></svg><p>Add time or condition data for both probe states to analyse stability.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 10: FRET -->
+    <div class="ana-panel" id="panel-10">
+      <div class="sub-tabs" id="fret-subtabs">
+        <button class="sub-tab-btn active" onclick="showFRETSub(0)">UV-Vis</button>
+        <button class="sub-tab-btn" onclick="showFRETSub(1)">Excitation-Emission</button>
+        <button class="sub-tab-btn" onclick="showFRETSub(2)">Fluorescence</button>
+        <button class="sub-tab-btn" onclick="showFRETSub(3)">FRET Params</button>
+      </div>
+      <!-- UV-Vis -->
+      <div class="fret-sub active" id="fretsub-0">
+        <div class="two-col">
+          <div class="panel-left">
+            <div class="card">
+              <div class="section-title">Donor UV-Vis</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                <div><div class="count-badge-wrap"><label>Wavelength (nm)</label><span class="badge muted" id="uv-d-cnt-wl">0</span></div><textarea id="uv-d-wl" rows="6" oninput="cntTA('uv-d-wl','uv-d-cnt-wl')"></textarea></div>
+                <div><div class="count-badge-wrap"><label>Absorbance</label><span class="badge muted" id="uv-d-cnt-abs">0</span></div><textarea id="uv-d-abs" rows="6" oninput="cntTA('uv-d-abs','uv-d-cnt-abs')"></textarea></div>
+              </div>
+              <div class="section-title">Acceptor UV-Vis</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                <div><div class="count-badge-wrap"><label>Wavelength (nm)</label><span class="badge muted" id="uv-a-cnt-wl">0</span></div><textarea id="uv-a-wl" rows="6" oninput="cntTA('uv-a-wl','uv-a-cnt-wl')"></textarea></div>
+                <div><div class="count-badge-wrap"><label>Absorbance</label><span class="badge muted" id="uv-a-cnt-abs">0</span></div><textarea id="uv-a-abs" rows="6" oninput="cntTA('uv-a-abs','uv-a-cnt-abs')"></textarea></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                <div><label>ε Donor (M⁻¹cm⁻¹)</label><input type="number" id="uv-d-eps" placeholder="optional"></div>
+                <div><label>ε Acceptor (M⁻¹cm⁻¹)</label><input type="number" id="uv-a-eps" placeholder="optional"></div>
+              </div>
+              <button class="btn-primary" onclick="runUVVis()">Plot UV-Vis →</button>
+            </div>
+          </div>
+          <div class="panel-right hidden" id="uv-right">
+            <div class="stat-grid" id="uv-stats"></div>
+            <div class="card"><div class="section-title">UV-Vis Spectra Overlay</div><div class="chart-wrap"><canvas id="uv-chart1"></canvas></div></div>
+            <div class="export-row"><button class="btn-secondary btn-sm" onclick="exportPNG('uv-chart1','uvvis')">PNG</button></div>
+          </div>
+          <div id="uv-empty" class="panel-right" style="align-items:center;justify-content:center">
+            <div class="empty-state"><svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><path d="M12 38 Q22 22 32 34 Q42 46 48 26" stroke="var(--brd2)" stroke-width="2.5" fill="none"/></svg><p>Enter donor and acceptor UV-Vis data to see spectral overlay.</p></div>
+          </div>
+        </div>
+      </div>
+      <!-- EE -->
+      <div class="fret-sub" id="fretsub-1" style="display:none">
+        <div class="two-col">
+          <div class="panel-left">
+            <div class="card">
+              <div class="section-title">Excitation Spectra</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                <div><label>Donor Ex (nm)</label><textarea id="ee-d-ex-wl" rows="5" oninput="cntTA('ee-d-ex-wl','')"></textarea></div>
+                <div><label>Donor Ex Intensity</label><textarea id="ee-d-ex-i" rows="5"></textarea></div>
+                <div><label>Acceptor Ex (nm)</label><textarea id="ee-a-ex-wl" rows="5"></textarea></div>
+                <div><label>Acceptor Ex Intensity</label><textarea id="ee-a-ex-i" rows="5"></textarea></div>
+              </div>
+              <div class="section-title">Emission Spectra</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                <div><label>Donor Em (nm)</label><textarea id="ee-d-em-wl" rows="5"></textarea></div>
+                <div><label>Donor Em Intensity</label><textarea id="ee-d-em-i" rows="5"></textarea></div>
+                <div><label>Acceptor Em (nm)</label><textarea id="ee-a-em-wl" rows="5"></textarea></div>
+                <div><label>Acceptor Em Intensity</label><textarea id="ee-a-em-i" rows="5"></textarea></div>
+              </div>
+              <button class="btn-primary" onclick="runEE()">Plot Spectra →</button>
+            </div>
+          </div>
+          <div class="panel-right hidden" id="ee-right">
+            <div class="stat-grid" id="ee-stats"></div>
+            <div class="card"><div class="section-title">Excitation Spectra</div><div class="chart-wrap"><canvas id="ee-chart1"></canvas></div></div>
+            <div class="card"><div class="section-title">Emission Spectra</div><div class="chart-wrap"><canvas id="ee-chart2"></canvas></div></div>
+            <div class="export-row"><button class="btn-secondary btn-sm" onclick="exportPNG('ee-chart1','excitation')">PNG Ex</button><button class="btn-secondary btn-sm" onclick="exportPNG('ee-chart2','emission')">PNG Em</button></div>
+          </div>
+          <div id="ee-empty" class="panel-right" style="align-items:center;justify-content:center">
+            <div class="empty-state"><svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><path d="M12 30 Q18 14 30 30 Q42 46 48 30" stroke="var(--brd2)" stroke-width="2.5" fill="none"/></svg><p>Enter excitation and emission spectra data to analyse Stokes shifts.</p></div>
+          </div>
+        </div>
+      </div>
+      <!-- Fluorescence -->
+      <div class="fret-sub" id="fretsub-2" style="display:none">
+        <div class="two-col">
+          <div class="panel-left">
+            <div class="card">
+              <div class="section-title">Fluorescence Data</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                <div><label>Wavelength (nm)</label><textarea id="fl-wl" rows="6" placeholder="Wavelength column"></textarea></div>
+                <div><label>F_Donor alone</label><textarea id="fl-fd" rows="6" placeholder="Donor intensity"></textarea></div>
+              </div>
+              <div class="section-title">Donor + Acceptor (up to 6 concentrations)</div>
+              <div id="fl-conc-slots" style="display:flex;flex-direction:column;gap:8px"></div>
+              <button class="btn-secondary btn-sm" style="margin-top:8px" onclick="addFLSlot()">+ Add Concentration</button>
+              <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div><label>Wavelength Start (nm)</label><input type="number" id="fl-wl-start" value="450"></div>
+                <div><label>Wavelength End (nm)</label><input type="number" id="fl-wl-end" value="700"></div>
+              </div>
+              <button class="btn-primary" style="margin-top:10px" onclick="runFL()">Analyse →</button>
+            </div>
+          </div>
+          <div class="panel-right hidden" id="fl-right">
+            <div class="card"><div class="section-title">Emission Spectra Overlay</div><div class="chart-wrap"><canvas id="fl-chart1"></canvas></div></div>
+            <div class="card"><div class="section-title">FRET Efficiency vs [Acceptor]</div><div class="chart-wrap"><canvas id="fl-chart2"></canvas></div></div>
+            <div class="card"><div class="section-title">Quenching Table</div><div id="fl-table"></div></div>
+            <div class="export-row"><button class="btn-secondary btn-sm" onclick="exportPNG('fl-chart1','fl_emission')">PNG</button></div>
+          </div>
+          <div id="fl-empty" class="panel-right" style="align-items:center;justify-content:center">
+            <div class="empty-state"><svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><path d="M16 40 Q22 18 30 22 Q38 26 44 14" stroke="var(--brd2)" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg><p>Paste donor and donor+acceptor emission data to compute FRET efficiencies.</p></div>
+          </div>
+        </div>
+      </div>
+      <!-- FRET Params -->
+      <div class="fret-sub" id="fretsub-3" style="display:none">
+        <div class="two-col">
+          <div class="panel-left">
+            <div class="card">
+              <div class="section-title">FRET Parameters</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+                <div><label>Donor Quantum Yield Φ_D</label><input type="number" id="fret-phi" value="0.3" step="0.01" min="0" max="1"></div>
+                <div><label>Refractive Index n</label><input type="number" id="fret-n" value="1.4" step="0.01"></div>
+                <div><label>Orientation Factor κ²</label><input type="number" id="fret-kappa" value="0.6667" step="0.01"></div>
+                <div><label>Distance r (Å)</label><input type="number" id="fret-r" placeholder="optional" step="0.1"></div>
+                <div><label>J(λ) (M⁻¹cm⁻¹nm⁴)</label><input type="number" id="fret-J" placeholder="auto or manual" step="0.1"></div>
+                <div><label>FRET Efficiency E (from data)</label><input type="number" id="fret-E" placeholder="from Tab 10C" step="0.001" min="0" max="1"></div>
+              </div>
+              <button class="btn-primary" onclick="calcFRET()">Calculate FRET →</button>
+            </div>
+          </div>
+          <div class="panel-right hidden" id="fret-right">
+            <div class="stat-grid" id="fret-stats"></div>
+            <div class="formula-box" id="fret-formula"></div>
+            <div class="card"><div class="section-title">FRET Efficiency vs r/R₀</div><div class="chart-wrap"><canvas id="fret-chart1"></canvas></div></div>
+            <div class="card"><div class="section-title">Spectral Overlap</div><div class="chart-wrap"><canvas id="fret-chart2"></canvas></div></div>
+            <div class="info-box" id="fret-interp"></div>
+            <div class="export-row"><button class="btn-secondary btn-sm" onclick="exportFRETTable()">Export Table</button><button class="btn-secondary btn-sm" onclick="exportPNG('fret-chart1','fret_eff')">PNG</button></div>
+          </div>
+          <div id="fret-empty" class="panel-right" style="align-items:center;justify-content:center">
+            <div class="empty-state"><svg width="60" height="60" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="var(--brd2)" stroke-width="2"/><circle cx="22" cy="30" r="7" stroke="var(--brd2)" stroke-width="2" fill="none"/><circle cx="38" cy="30" r="7" stroke="var(--brd2)" stroke-width="2" fill="none"/><path d="M25 28 Q30 22 35 28" stroke="var(--brd2)" stroke-width="2" fill="none" stroke-linecap="round"/></svg><p>Enter FRET parameters to calculate Förster radius R₀ and transfer efficiency.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 11: REPORT -->
+    <div class="ana-panel" id="panel-11">
+      <div class="card" style="max-width:900px;margin:0 auto">
+        <h2 style="font-size:18px;margin-bottom:6px">📊 Report Generator</h2>
+        <p style="color:var(--mu);font-size:13px;margin-bottom:20px">Assembles all completed analysis results into a formatted report.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+          <button class="btn-primary" onclick="generateReport()">Generate Report →</button>
+          <button class="btn-secondary" onclick="openReportModal()">🔍 Full Report Modal</button>
+          <button class="btn-secondary" onclick="exportReportJSON()">⬇ Export JSON</button>
+          <button class="btn-secondary" onclick="window.print()">🖨 Print</button>
+          <button class="btn-secondary" onclick="copyReportMD()">📋 Copy Markdown</button>
+        </div>
+        <div id="report-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer style="background:var(--s2);border-top:1.5px solid var(--brd);padding:14px 20px;text-align:center;font-size:11px;color:var(--mu);font-family:'Space Mono',monospace">
+    Fluoresense Analytics · <a href="https://sites.google.com/view/schrodingersstudent/initiatives" style="color:var(--ac)">sites.google.com/view/schrodingersstudent/initiatives</a> · 
+    <a href="mailto:theeasyresearcher@gmail.com" style="color:var(--ac)">theeasyresearcher@gmail.com</a> · All computation runs locally (No data saved anywhere)
+  </footer>
+</div>
+
+<!-- REPORT MODAL -->
+<div id="report-modal">
+  <div class="report-modal-inner">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h2 style="font-size:18px">Analysis Report</h2>
+      <div style="display:flex;gap:8px">
+        <button class="btn-secondary btn-sm" onclick="window.print()">🖨 Print</button>
+        <button class="btn-secondary btn-sm" onclick="copyReportMD()">Copy MD</button>
+        <button class="btn-primary btn-sm" onclick="document.getElementById('report-modal').classList.remove('open')">Close ✕</button>
+      </div>
+    </div>
+    <div id="modal-report-content"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// APPS STATE
+// ============================================================
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwYY2Y5BygTAyG_kLekIXKO6HX0CtzciF-zGmXmT66XOrIrruc4l2vmgvmJ9Plz8joFug/exec';
+
+const appState = {
+  user: null,
+  mode: 'quench',
+  unlocked: false,
+  setupData: {x:[],y:[],wl:[],fw:[],auc:[]},
+  results: {}
+};
+
+const ANALYTE_COLORS = ['#0d9488','#2563eb','#7c3aed','#ea6c00','#dc2626','#059669','#d97706','#0284c7','#9333ea','#db2777','#65a30d','#0891b2','#c2410c','#7c3aed','#b45309'];
+
+// ============================================================
+// BOOT
+// ============================================================
+(function boot(){
+  const u = localStorage.getItem('Fluoresense_user');
+  const m = localStorage.getItem('Fluoresense_mode');
+  if(m) appState.mode = m;
+  if(u){
+    try{
+      appState.user = JSON.parse(u);
+      showPage(2);
+      updateModeUI();
+      return;
+    }catch(e){}
+  }
+  showPage(1);
+})();
+
+function showPage(n){
+  document.getElementById('page-register').style.display = n===1?'flex':'none';
+  document.getElementById('page-data').style.display = n===2?'flex':'none';
+  const pa = document.getElementById('page-analytics');
+  if(n===3){pa.classList.add('active');} else {pa.classList.remove('active');}
+  if(n===2 && appState.user){
+    document.getElementById('welcome-name').textContent = 'Welcome, '+appState.user.name;
+    const md = document.getElementById('mode-'+appState.mode);
+    if(md){md.click();}
+  }
+  if(n===3){
+    document.getElementById('user-chip-name').textContent = appState.user?.name?.split(' ')[0]||'User';
+    updateModeChip();
+  }
+}
+
+// ============================================================
+// PAGE 1: REGISTER
+// ============================================================
+document.getElementById('reg-form').addEventListener('submit', function(e){
+  e.preventDefault();
+  const name=v('reg-name'),inst=v('reg-inst'),email=v('reg-email'),phone=v('reg-phone');
+  let ok=true;
+  const setErr=(id,msg)=>{document.getElementById(id).textContent=msg;if(msg)ok=false;};
+  setErr('err-name',name.length<2?'Name required':'');
+  setErr('err-inst',inst.length<2?'Institute required':'');
+  setErr('err-email',!/^[^@]+@[^@]+\.[^@]+$/.test(email)?'Valid email required':'');
+  setErr('err-phone',phone.length<6?'Contact number required':'');
+  if(!ok) return;
+  const btn=document.getElementById('reg-btn');
+  btn.innerHTML='<span class="spinner"></span>';
+  btn.disabled=true;
+  appState.user={name,institute:inst,email,phone};
+  localStorage.setItem('Fluoresense_user',JSON.stringify(appState.user));
+  if(APPS_SCRIPT_URL){
+    const regPayload={
+      sheet: 'Registrations',
+      timestamp: new Date().toISOString(),
+      name: appState.user.name,
+      institute: appState.user.institute,
+      email: appState.user.email,
+      phone: appState.user.phone,
+      source: 'FluroSense'
+    };
+    fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',body:JSON.stringify(regPayload)}).catch(()=>{});
+  }
+  setTimeout(()=>showPage(2),600);
+});
+
+// ============================================================
+// PAGE 2: DATA INPUT
+// ============================================================
+function v(id){return document.getElementById(id)?.value?.trim()||'';}
+
+function parseInp(key,el){
+  const vals = el.value.split('\n').map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n));
+  appState.setupData[key]=vals;
+  document.getElementById('cnt-'+key).textContent=vals.length;
+  el.classList.toggle('filled',vals.length>0);
+  checkDataReady();
+}
+
+function checkDataReady(){
+  const x=appState.setupData.x, y=appState.setupData.y;
+  const ok = x.length>=2 && y.length>=2 && x.length===y.length;
+  const btn=document.getElementById('go-analytics-btn');
+  btn.disabled=!ok;
+  document.getElementById('data-err').textContent=(!ok && x.length>0 && y.length>0 && x.length!==y.length)?'X and Y must have equal number of values':'';
+}
+
+function setMode(m){
+  appState.mode=m;
+  localStorage.setItem('Fluoresense_mode',m);
+  document.getElementById('mode-quench').classList.toggle('active',m==='quench');
+  document.getElementById('mode-enhance').classList.toggle('active',m==='enhance');
+  updateModeChip();
+}
+
+function updateModeUI(){
+  document.getElementById('mode-quench')?.classList.toggle('active',appState.mode==='quench');
+  document.getElementById('mode-enhance')?.classList.toggle('active',appState.mode==='enhance');
+  updateModeChip();
+}
+
+function updateModeChip(){
+  const chip = document.getElementById('mode-chip-hdr');
+  if(!chip) return;
+  chip.textContent = appState.mode==='quench'?'📉 Quenching':'📈 Enhancement';
+  chip.className = 'mode-chip '+(appState.mode==='quench'?'quench':'enhance');
+}
+
+function goToAnalytics(){
+  appState.unlocked=true;
+  showPage(3);
+  autoFillFromSetup(0);
+  // Submit data input to Google Sheets (field names must match Apps Script exactly)
+  if(APPS_SCRIPT_URL && appState.user){
+    const sd=appState.setupData;
+    const u=appState.user;
+    const payload={
+      sheet: 'InputData',
+      timestamp: new Date().toISOString(),
+      name: u.name,
+      institute: u.institute,
+      email: u.email,
+      phone: u.phone,
+      mode: appState.mode,
+      x_count: sd.x.length,
+      y_count: sd.y.length,
+      x_values: sd.x.join(','),
+      y_intensity: sd.y.join(','),
+      peak_wavelength: sd.wl.length ? sd.wl.join(',') : '',
+      fwhm: sd.fw.length ? sd.fw.join(',') : '',
+      auc: sd.auc.length ? sd.auc.join(',') : ''
+    };
+    fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',body:JSON.stringify(payload)}).catch(()=>{});
+  }
+}
+
+function autoFillFromSetup(tabId){
+  if(!appState.setupData.x.length) return;
+  const xStr = appState.setupData.x.join('\n');
+  const yStr = appState.setupData.y.join('\n');
+  const ids = [['gen-x','gen-y'],['gpr-x','gpr-y'],['pred-x','pred-y'],['sv-x','sv-y']];
+  if(tabId===0) ids.forEach(([xi,yi])=>{
+    const ex=document.getElementById(xi), ey=document.getElementById(yi);
+    if(ex && !ex.value){ex.value=xStr;ex.classList.add('filled');}
+    if(ey && !ey.value){ey.value=yStr;ey.classList.add('filled');}
+  });
+  // update count badges
+  ['gen-x','gen-y','gpr-x','gpr-y','pred-x','pred-y','sv-x','sv-y'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el||!el.value) return;
+    const cnt=el.id.replace('-x','-cnt-x').replace('-y','-cnt-y');
+    const badge=document.getElementById(cnt);
+    if(badge) badge.textContent=el.value.split('\n').filter(s=>!isNaN(parseFloat(s))).length;
+  });
+}
+
+function logout(){
+  localStorage.removeItem('Fluoresense_user');
+  localStorage.removeItem('Fluoresense_mode');
+  appState.user=null;
+  appState.unlocked=false;
+  showPage(1);
+}
+
+// ============================================================
+// PAGE 3: TABS
+// ============================================================
+function showTab(i){
+  document.querySelectorAll('.ana-panel').forEach((p,j)=>p.classList.toggle('active',j===i));
+  document.querySelectorAll('.nav-tab').forEach((t,j)=>t.classList.toggle('active',j===i));
+  if(i===0 && appState.setupData.x.length) autoFillFromSetup(0);
+}
+
+function showAdvSub(i){
+  document.querySelectorAll('.adv-sub').forEach((p,j)=>{ p.style.display=j===i?'block':'none'; });
+  document.querySelectorAll('#adv-subtabs .sub-tab-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
+}
+
+function showFRETSub(i){
+  document.querySelectorAll('.fret-sub').forEach((p,j)=>{ p.style.display=j===i?'block':'none'; });
+  document.querySelectorAll('#fret-subtabs .sub-tab-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
+}
+
+// ============================================================
+// SHARED UTILITIES
+// ============================================================
+function parseCol(text){ return text.split('\n').map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n)); }
+function cntTA(id,badgeId){ const v=parseCol(document.getElementById(id)?.value||''); if(badgeId) document.getElementById(badgeId).textContent=v.length; const el=document.getElementById(id); if(el) el.classList.toggle('filled',v.length>0); return v; }
+
+function linReg(x,y){
+  const n=x.length; let sx=0,sy=0,sxy=0,sx2=0,sy2=0;
+  for(let i=0;i<n;i++){sx+=x[i];sy+=y[i];sxy+=x[i]*y[i];sx2+=x[i]*x[i];sy2+=y[i]*y[i];}
+  const denom=n*sx2-sx*sx;
+  const slope=denom!==0?(n*sxy-sx*sy)/denom:0;
+  const intercept=(sy-slope*sx)/n;
+  const ssres=y.reduce((a,yi,i)=>a+(yi-(slope*x[i]+intercept))**2,0);
+  const sstot=y.reduce((a,yi)=>a+(yi-sy/n)**2,0);
+  const r2=1-ssres/sstot;
+  return {slope,intercept,r2};
+}
+
+function polyFit(x,y,deg){
+  const n=x.length, m=deg+1;
+  const A=[], b=[];
+  for(let i=0;i<m;i++){
+    A.push([]);
+    for(let j=0;j<m;j++) A[i].push(x.reduce((s,xi)=>s+Math.pow(xi,i+j),0));
+    b.push(x.reduce((s,xi,k)=>s+Math.pow(xi,i)*y[k],0));
+  }
+  const coeffs=gaussElim(A,b);
+  const yhat=x.map(xi=>coeffs.reduce((s,c,j)=>s+c*Math.pow(xi,j),0));
+  const mean=y.reduce((a,b)=>a+b)/n;
+  const ssres=y.reduce((a,yi,i)=>a+(yi-yhat[i])**2,0);
+  const sstot=y.reduce((a,yi)=>a+(yi-mean)**2,0);
+  return {coeffs,r2:1-ssres/sstot,predict:xi=>coeffs.reduce((s,c,j)=>s+c*Math.pow(xi,j),0)};
+}
+
+function gaussElim(A,b){
+  const n=A.length;
+  for(let i=0;i<n;i++){
+    let max=i;
+    for(let k=i+1;k<n;k++) if(Math.abs(A[k][i])>Math.abs(A[max][i])) max=k;
+    [A[i],A[max]]=[A[max],A[i]];[b[i],b[max]]=[b[max],b[i]];
+    for(let k=i+1;k<n;k++){
+      const f=(A[i][i]!==0)?A[k][i]/A[i][i]:0;
+      for(let j=i;j<n;j++) A[k][j]-=f*A[i][j];
+      b[k]-=f*b[i];
+    }
+  }
+  const x=new Array(n).fill(0);
+  for(let i=n-1;i>=0;i--){x[i]=b[i];for(let j=i+1;j<n;j++) x[i]-=A[i][j]*x[j];x[i]/=(A[i][i]||1e-12);}
+  return x;
+}
+
+function calcLOD(sigma,slope){ return 3*sigma/Math.abs(slope); }
+function calcLOQ(sigma,slope){ return 10*sigma/Math.abs(slope); }
+
+function gaussNoise(n,sigma){
+  return Array.from({length:n},()=>{
+    let u=0,v=0;
+    while(!u) u=Math.random();
+    while(!v) v=Math.random();
+    return sigma*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+  });
+}
+
+function calcSV(x,y){
+  const lr=linReg(x,y);
+  const type=lr.r2>0.98?'linear':(y[y.length-1]/y[0]>(x[x.length-1]/x[0])*1.2?'upward (combined static+dynamic)':'downward (saturated)');
+  return {Ksv:lr.slope,r2:lr.r2,type,intercept:lr.intercept};
+}
+
+function calcR0(kappa2,phiD,n4inv,J){
+  return 0.211*Math.pow(kappa2*phiD*n4inv*J,1/6)*10;
+}
+
+function calcFRETeff(R0,r){ return Math.pow(R0,6)/(Math.pow(R0,6)+Math.pow(r,6)); }
+
+const chartInstances={};
+function newChart(id,cfg){
+  if(chartInstances[id]) chartInstances[id].destroy();
+  const ctx=document.getElementById(id)?.getContext('2d');
+  if(!ctx) return null;
+  chartInstances[id]=new Chart(ctx,cfg);
+  return chartInstances[id];
+}
+
+function exportPNG(canvasId,filename){
+  const c=document.getElementById(canvasId);
+  if(!c) return;
+  const a=document.createElement('a');
+  a.download=filename+'.png';
+  a.href=c.toDataURL('image/png');
+  a.click();
+}
+
+function exportCSV(headers,rows){
+  const lines=[headers.join(','),...rows.map(r=>r.map(v=>typeof v==='string'&&v.includes(',')? '"'+v+'"':v).join(','))];
+  navigator.clipboard.writeText(lines.join('\n')).then(()=>showToast('CSV copied!')).catch(()=>alert(lines.join('\n')));
+}
+
+function showToast(msg){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;bottom:20px;right:20px;background:var(--tx);color:#fff;padding:8px 16px;border-radius:6px;font-size:13px;z-index:9999;font-family:"DM Sans",sans-serif;animation:fadeOut 2s forwards';
+  document.body.appendChild(t);
+  if(!document.getElementById('toast-style')){
+    const s=document.createElement('style');s.id='toast-style';s.textContent='@keyframes fadeOut{0%,60%{opacity:1}100%{opacity:0}}';document.head.appendChild(s);
+  }
+  setTimeout(()=>t.remove(),2000);
+}
+
+function flashGate(el){ el.classList.add('flash-gate'); setTimeout(()=>el.classList.remove('flash-gate'),500); }
+
+function statCard(label,value,sub=''){
+  return `<div class="stat-card"><div class="stat-label">${label}</div><div class="stat-value">${value}</div>${sub?`<div class="stat-sub">${sub}</div>`:''}</div>`;
+}
+
+function fmt(n,d=4){ if(isNaN(n)||n===null||n===undefined) return '—'; return typeof n==='number'?n.toFixed(d):n; }
+function fmtE(n){ if(n===null||n===undefined||isNaN(n)) return '—'; if(n===0) return '0'; if(Math.abs(n)<0.001||Math.abs(n)>1e6) return n.toExponential(3); return n.toPrecision(4); }
+
+const CHART_COLORS=['#0d9488','#2563eb','#7c3aed','#ea6c00','#dc2626','#059669'];
+
+function baseChartOpts(xlabel='X',ylabel='Y'){
+  return {
+    responsive:true,maintainAspectRatio:true,
+    plugins:{legend:{labels:{font:{family:"'DM Sans', sans-serif",size:11}}},tooltip:{bodyFont:{family:"'DM Sans', sans-serif"}}},
+    scales:{x:{title:{display:true,text:xlabel,font:{family:"'Space Mono', monospace",size:10}},grid:{color:'rgba(0,0,0,0.04)'}},
+            y:{title:{display:true,text:ylabel,font:{family:"'Space Mono', monospace",size:10}},grid:{color:'rgba(0,0,0,0.04)'}}}
+  };
+}
+
+function showRight(id){ document.getElementById(id).classList.remove('hidden'); const emp=document.getElementById(id.replace('-right','-empty')); if(emp) emp.style.display='none'; }
+
+// ============================================================
+// TAB 0: SYNTHETIC GENERATOR
+// ============================================================
+let genResults=null;
+function clearGen(){
+  ['gen-x','gen-y'].forEach(id=>{ const el=document.getElementById(id); el.value=''; el.classList.remove('filled'); });
+  ['gen-cnt-x','gen-cnt-y'].forEach(id=>document.getElementById(id).textContent='0');
+  document.getElementById('gen-right').classList.add('hidden');
+  document.getElementById('gen-empty').style.display='flex';
+}
+
+function runGenerator(){
+  const x=parseCol(v('gen-x')), y=parseCol(v('gen-y'));
+  if(x.length<2||y.length<2||x.length!==y.length){ showToast('Need matching X and Y data'); return; }
+  const xlabel=v('gen-xlabel'), ylabel=v('gen-ylabel');
+  const ratioType=document.getElementById('gen-ratio').value;
+  const npts=parseInt(v('gen-npts'))||150;
+  const noise=parseFloat(document.getElementById('gen-noise').value)/100;
+  const lr=linReg(x,y);
+  const pr=polyFit(x,y,2);
+  const bestFit=pr.r2>=lr.r2?'Polynomial (deg 2)':'Linear';
+  const bestR2=Math.max(lr.r2,pr.r2);
+  const xMin=Math.min(...x), xMax=Math.max(...x);
+  const xSyn=Array.from({length:npts},(_,i)=>xMin+i*(xMax-xMin)/(npts-1));
+  const useLinear=lr.r2>=pr.r2;
+  const ySynBase=xSyn.map(xi=>useLinear?(lr.slope*xi+lr.intercept):pr.predict(xi));
+  const noiseVals=gaussNoise(npts,noise*Math.max(...y.map(Math.abs)));
+  const ySyn=ySynBase.map((v,i)=>v+noiseVals[i]);
+  const y0=y[0];
+  const ratio=ratioType==='f0f'?y.map(yi=>y0/yi):y.map(yi=>(y0-yi)/y0);
+  const ratioSyn=ratioType==='f0f'?ySyn.map(yi=>y0/yi):ySyn.map(yi=>(y0-yi)/y0);
+  const svLR=linReg(x,ratio);
+  const sigma=Math.sqrt(y.reduce((a,yi,i)=>a+(yi-(lr.slope*x[i]+lr.intercept))**2,0)/y.length);
+  const lod=calcLOD(sigma,Math.abs(svLR.slope));
+  genResults={x,y,xSyn,ySyn,ratio,ratioSyn,lr,pr,svLR,lod,xlabel,ylabel,ratioType};
+  appState.results.generator=genResults;
+  document.getElementById('gen-stats').innerHTML=
+    statCard('Linear R²',fmt(lr.r2))+
+    statCard('Poly R²',fmt(pr.r2))+
+    statCard('Best Fit',bestFit)+
+    statCard('Ksv',fmtE(svLR.slope),'M⁻¹')+
+    statCard('LOD',fmtE(lod),v('lod-unit')||'μM');
+  document.getElementById('gen-chart2-title').textContent=(ratioType==='f0f'?'F₀/F':'ΔF/F₀')+' vs Analyte';
+  newChart('gen-chart1',{type:'scatter',data:{datasets:[
+    {label:'Original',data:x.map((xi,i)=>({x:xi,y:y[i]})),backgroundColor:CHART_COLORS[0],pointRadius:5},
+    {label:'Synthetic',data:xSyn.map((xi,i)=>({x:xi,y:ySyn[i]})),type:'line',borderColor:CHART_COLORS[1],backgroundColor:'transparent',pointRadius:0,tension:.3}
+  ]},options:{...baseChartOpts(xlabel,ylabel)}});
+  newChart('gen-chart2',{type:'scatter',data:{datasets:[
+    {label:'Original',data:x.map((xi,i)=>({x:xi,y:ratio[i]})),backgroundColor:CHART_COLORS[0],pointRadius:5},
+    {label:'Synthetic',data:xSyn.map((xi,i)=>({x:xi,y:ratioSyn[i]})),type:'line',borderColor:CHART_COLORS[1],backgroundColor:'transparent',pointRadius:0,tension:.3}
+  ]},options:{...baseChartOpts(xlabel,ratioType==='f0f'?'F₀/F':'ΔF/F₀')}});
+  showRight('gen-right');
+}
+
+function exportGenCSV(){
+  if(!genResults) return;
+  exportCSV(['X','Y_orig','Y_syn','Ratio'],genResults.xSyn.map((xi,i)=>[xi.toFixed(3),genResults.ySyn[i].toFixed(3),'',genResults.ratioSyn[i].toFixed(4)]));
+}
+
+// ============================================================
+// TAB 1: GPR
+// ============================================================
+function rbfKernel(xi,xj,l,sf2){ return sf2*Math.exp(-0.5*((xi-xj)/l)**2); }
+
+function buildK(x1,x2,l,sf2,sn2_diag=false){
+  const K=[];
+  for(let i=0;i<x1.length;i++){
+    K.push([]);
+    for(let j=0;j<x2.length;j++){
+      K[i].push(rbfKernel(x1[i],x2[j],l,sf2)+(sn2_diag&&i===j?sn2_diag:0));
+    }
+  }
+  return K;
+}
+
+function choleskyDecomp(A){
+  const n=A.length;
+  // Add jitter for numerical stability
+  const jitter=1e-6*Math.max(...A.map((r,i)=>r[i]));
+  const M=A.map((r,i)=>r.map((v,j)=>i===j?v+jitter:v));
+  const L=Array.from({length:n},()=>new Array(n).fill(0));
+  for(let i=0;i<n;i++){
+    for(let j=0;j<=i;j++){
+      let s=0;
+      for(let k=0;k<j;k++) s+=L[i][k]*L[j][k];
+      const diag=M[i][i]-s;
+      L[i][j]=(i===j)?Math.sqrt(Math.max(0,diag)):((M[i][j]-s)/(L[j][j]||1e-12));
+    }
+  }
+  return L;
+}
+
+function solveLower(L,b){
+  const n=L.length, x=new Array(n).fill(0);
+  for(let i=0;i<n;i++){let s=b[i];for(let j=0;j<i;j++) s-=L[i][j]*x[j];x[i]=s/L[i][i];}
+  return x;
+}
+function solveUpper(U,b){
+  const n=U.length, x=new Array(n).fill(0);
+  for(let i=n-1;i>=0;i--){let s=b[i];for(let j=i+1;j<n;j++) s-=U[i][j]*x[j];x[i]=s/U[i][i];}
+  return x;
+}
+
+function matVec(M,v){ return M.map(row=>row.reduce((s,mij,j)=>s+mij*v[j],0)); }
+function matMat(A,B){ return A.map(row=>Array.from({length:B[0].length},(_,j)=>row.reduce((s,v,k)=>s+v*B[k][j],0))); }
+function transpose(M){ return M[0].map((_,j)=>M.map(r=>r[j])); }
+
+function runGPR(){
+  const x=parseCol(v('gpr-x')), y=parseCol(v('gpr-y'));
+  if(x.length<3||x.length!==y.length){ showToast('Need at least 3 matching X/Y values'); return; }
+  const npts=parseInt(v('gpr-npts'))||120;
+  const xRange=[Math.min(...x),Math.max(...x)];
+  const xStar=Array.from({length:npts},(_,i)=>xRange[0]+i*(xRange[1]-xRange[0])/(npts-1));
+  // auto-estimate hyperparams
+  let l=parseFloat(v('gpr-l'))||0;
+  let sf2=parseFloat(v('gpr-sf'))||0;
+  let sn2=parseFloat(v('gpr-sn'))||0;
+  if(!l) l=(xRange[1]-xRange[0])/3;
+  if(!sf2) sf2=Math.pow(Math.max(...y)-Math.min(...y),2)/4;
+  if(!sn2) sn2=sf2*0.01;
+  const K=buildK(x,x,l,sf2,sn2);
+  let L;
+  try{ L=choleskyDecomp(K); } catch(e){ showToast('GPR: matrix decomposition failed'); return; }
+  const alpha=solveUpper(transpose(L),solveLower(L,y));
+  const Ks=buildK(xStar,x,l,sf2);
+  const mu=xStar.map((_,i)=>Ks[i].reduce((s,ksi,j)=>s+ksi*alpha[j],0));
+  const Kss=xStar.map(xi=>rbfKernel(xi,xi,l,sf2));
+  const v2=Ks.map(row=>{ const tmp=solveLower(L,row); return row.reduce((s,_,j)=>s+tmp[j]*tmp[j],0); });
+  const sigma2=Kss.map((k,i)=>Math.max(0,k-v2[i]));
+  const sigma=sigma2.map(Math.sqrt);
+  document.getElementById('gpr-stats').innerHTML=
+    statCard('Length ℓ',fmt(l,3))+statCard('σ²f',fmt(sf2,4))+statCard('σ²n',fmt(sn2,6));
+  const xl=v('gpr-xlabel')||'Concentration';
+  newChart('gpr-chart1',{type:'scatter',data:{datasets:[
+    {label:'95% CI',data:xStar.map((xi,i)=>({x:xi,y:mu[i]+1.96*sigma[i]})),type:'line',borderColor:'transparent',backgroundColor:'rgba(13,148,136,0.15)',fill:'+1',pointRadius:0,tension:.3},
+    {label:'95% CI lower',data:xStar.map((xi,i)=>({x:xi,y:mu[i]-1.96*sigma[i]})),type:'line',borderColor:'transparent',fill:false,pointRadius:0,tension:.3,showLine:true},
+    {label:'GPR Mean',data:xStar.map((xi,i)=>({x:xi,y:mu[i]})),type:'line',borderColor:'#0d9488',backgroundColor:'transparent',pointRadius:0,tension:.3},
+    {label:'Data',data:x.map((xi,i)=>({x:xi,y:y[i]})),backgroundColor:'#2563eb',pointRadius:5}
+  ]},options:{...baseChartOpts(xl,'Intensity')}});
+  newChart('gpr-chart2',{type:'line',data:{labels:xStar.map(xi=>xi.toFixed(2)),datasets:[{label:'σ(x)',data:sigma,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,0.1)',fill:true,pointRadius:0,tension:.3}]},options:{...baseChartOpts(xl,'σ(x)')}});
+  showRight('gpr-right');
+}
+
+// ============================================================
+// TAB 2: MULTI-ANALYTE
+// ============================================================
+let maSlots=[],maSlotCtr=0;
+function addMASlot(){
+  if(document.querySelectorAll('#ma-slots .analyte-slot').length>=6) return;
+  const idx=maSlotCtr++;
+  const color=ANALYTE_COLORS[document.querySelectorAll('#ma-slots .analyte-slot').length%ANALYTE_COLORS.length];
+  const id='ma-slot-'+idx;
+  maSlots.push({id,color});
+  const div=document.createElement('div');
+  div.className='analyte-slot';div.id=id;
+  div.innerHTML=`<div class="slot-header"><span class="color-dot" style="background:${color}"></span><input placeholder="Analyte ${idx+1}" style="flex:1;font-weight:600" id="ma-name-${idx}"><button class="btn-danger btn-sm" onclick="removeMASlot(${idx})">✕</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><div class="count-badge-wrap"><label>X</label><span class="badge muted" id="ma-cx-${idx}">0</span></div><textarea id="ma-x-${idx}" rows="4" oninput="cntTA('ma-x-${idx}','ma-cx-${idx}')"></textarea></div><div><div class="count-badge-wrap"><label>Y</label><span class="badge muted" id="ma-cy-${idx}">0</span></div><textarea id="ma-y-${idx}" rows="4" oninput="cntTA('ma-y-${idx}','ma-cy-${idx}')"></textarea></div></div>`;
+  document.getElementById('ma-slots').appendChild(div);
+  updateMACount();
+}
+function removeMASlot(i){
+  const el=document.getElementById('ma-slot-'+i);
+  if(el) el.remove();
+  maSlots=maSlots.filter(s=>s.id!=='ma-slot-'+i);
+  updateMACount();
+}
+function clearMASlots(){document.getElementById('ma-slots').innerHTML='';maSlots=[];maSlotCtr=0;updateMACount();}
+function updateMACount(){const n=document.querySelectorAll('#ma-slots .analyte-slot').length;document.getElementById('ma-count-badge').textContent=n+' / 6';document.getElementById('ma-add-btn').disabled=n>=6;}
+
+function runMA(){
+  const datasets=[];
+  document.querySelectorAll('#ma-slots .analyte-slot').forEach((slot,si)=>{
+    const idx=parseInt(slot.id.split('-').pop());
+    const name=document.getElementById('ma-name-'+idx)?.value||'Analyte '+(si+1);
+    const x=parseCol(document.getElementById('ma-x-'+idx)?.value||'');
+    const y=parseCol(document.getElementById('ma-y-'+idx)?.value||'');
+    if(x.length>=2&&y.length>=2&&x.length===y.length) datasets.push({name,x,y,color:ANALYTE_COLORS[si%ANALYTE_COLORS.length]});
+  });
+  if(datasets.length<2){ showToast('Need at least 2 analytes'); return; }
+  const y0s=datasets.map(d=>d.y[0]);
+  const svs=datasets.map(d=>{ const ratio=d.y.map(yi=>y0s[datasets.indexOf(d)]/yi); return calcSV(d.x,ratio); });
+  // Radar features: Ksv, R², mean ratio, max ratio, slope of ratio
+  const features=['Ksv','R²','Mean F₀/F','Max F₀/F','Slope'];
+  const featureVals=datasets.map((d,i)=>{
+    const ratio=d.y.map(yi=>y0s[i]/yi);
+    return [svs[i].Ksv,svs[i].r2,ratio.reduce((a,b)=>a+b)/ratio.length,Math.max(...ratio),svs[i].Ksv];
+  });
+  // Normalize features
+  const maxF=features.map((_,fi)=>Math.max(...featureVals.map(fv=>Math.abs(fv[fi]))));
+  const normF=featureVals.map(fv=>fv.map((v,fi)=>fi===0?Math.min(v/maxF[fi],1):Math.min(v,1)));
+
+  newChart('ma-chart-radar',{type:'radar',data:{labels:features,datasets:datasets.map((d,i)=>({label:d.name,data:normF[i],borderColor:d.color,backgroundColor:d.color+'22',pointBackgroundColor:d.color}))},options:{responsive:true,plugins:{legend:{position:'top'}},scales:{r:{min:0,max:1}}}});
+
+  newChart('ma-chart-int',{type:'scatter',data:{datasets:datasets.map((d,i)=>({label:d.name,data:d.x.map((xi,j)=>({x:xi,y:d.y[j]})),borderColor:d.color,backgroundColor:d.color,showLine:true,tension:.3,pointRadius:4}))},options:{...baseChartOpts('Concentration','Intensity')}});
+
+  const svDatasets=datasets.map((d,i)=>{ const ratio=d.y.map(yi=>y0s[i]/yi); return {label:d.name,data:d.x.map((xi,j)=>({x:xi,y:ratio[j]})),borderColor:d.color,backgroundColor:d.color,showLine:true,tension:.3,pointRadius:4}; });
+  newChart('ma-chart-sv',{type:'scatter',data:{datasets:svDatasets},options:{...baseChartOpts('Concentration','F₀/F')}});
+
+  newChart('ma-chart-ksv',{type:'bar',data:{labels:datasets.map(d=>d.name),datasets:[{label:'Ksv',data:svs.map(s=>s.Ksv),backgroundColor:datasets.map(d=>d.color)}]},options:{...baseChartOpts('Analyte','Ksv (M⁻¹)')}});
+
+  // Discrimination matrix
+  const n=datasets.length;
+  const dists=Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>{
+    if(i===j) return 0;
+    const f1=normF[i],f2=normF[j];
+    return Math.sqrt(f1.reduce((s,v,k)=>s+(v-f2[k])**2,0));
+  }));
+  const maxD=Math.max(...dists.flat().filter(v=>v>0));
+  let matHTML=`<table class="data-table"><tr><th></th>${datasets.map(d=>`<th>${d.name}</th>`).join('')}</tr>`;
+  dists.forEach((row,i)=>{ matHTML+=`<tr><th style="background:var(--s3)">${datasets[i].name}</th>${row.map((v,j)=>{ const norm=v/maxD; const bg=i===j?'var(--s3)':`rgba(13,148,136,${norm})`; const col=norm>0.5?'#fff':'var(--tx)'; return `<td style="background:${bg};color:${col};text-align:center">${fmt(v,3)}</td>`; }).join('')}</tr>`; });
+  matHTML+='</table>';
+  document.getElementById('ma-matrix-content').innerHTML=matHTML;
+
+  document.getElementById('ma-feature-table').style.display='block';
+  let ftHTML=`<table class="data-table"><tr><th>Analyte</th><th>Ksv</th><th>R²</th><th>Mean F₀/F</th></tr>`;
+  datasets.forEach((d,i)=>ftHTML+=`<tr><td>${d.name}</td><td>${fmtE(svs[i].Ksv)}</td><td>${fmt(svs[i].r2)}</td><td>${fmt(featureVals[i][2],3)}</td></tr>`);
+  ftHTML+='</table>';
+  document.getElementById('ma-feature-content').innerHTML=ftHTML;
+
+  showRight('ma-right');
+}
+
+// ============================================================
+// TAB 3: PREDICTIVE
+// ============================================================
+let predModel=null;
+function runPredictive(){
+  const x=parseCol(v('pred-x')), y=parseCol(v('pred-y'));
+  if(x.length<3||x.length!==y.length){ showToast('Need at least 3 matched data points'); return; }
+  const modelType=document.getElementById('pred-model').value;
+  const ratioType=document.getElementById('pred-ratio').value;
+  const y0=y[0];
+  const yUse=ratioType==='f0f'?y.map(yi=>y0/yi):y;
+  let fit,fitLabel;
+  if(modelType==='linear'){fit=linReg(x,yUse);fitLabel='Linear';}
+  else if(modelType==='poly2'){fit=polyFit(x,yUse,2);fitLabel='Poly2';}
+  else if(modelType==='gpr'||modelType==='sv'){fit=linReg(x,yUse);fitLabel='Linear (SV)';}
+  predModel={fit,x,y:yUse,modelType,y0,ratioType,fitLabel};
+  const xMin=Math.min(...x),xMax=Math.max(...x);
+  const xFit=Array.from({length:100},(_,i)=>xMin+i*(xMax-xMin)/99);
+  const yFit=xFit.map(xi=>modelType==='poly2'?fit.predict(xi):fit.slope*xi+fit.intercept);
+  const residuals=x.map((xi,i)=>yUse[i]-(modelType==='poly2'?fit.predict(xi):fit.slope*xi+fit.intercept));
+  const se=Math.sqrt(residuals.reduce((a,b)=>a+b*b)/residuals.length);
+  const zMap={90:1.645,95:1.96,99:2.576};
+  const conf=parseInt(document.getElementById('pred-conf').value)||95;
+  const z=zMap[conf]||1.96;
+  const ciUpper=xFit.map(xi=>(modelType==='poly2'?fit.predict(xi):fit.slope*xi+fit.intercept)+z*se);
+  const ciLower=xFit.map(xi=>(modelType==='poly2'?fit.predict(xi):fit.slope*xi+fit.intercept)-z*se);
+  document.getElementById('pred-stats').innerHTML=
+    statCard('R²',fmt(fit.r2))+statCard('Model',fitLabel)+
+    statCard('SE',fmt(se,4))+statCard('Conf.',conf+'%');
+  const svRatio=y.map(yi=>y0/yi);
+  const svFit=linReg(x,svRatio);
+  newChart('pred-chart1',{type:'scatter',data:{datasets:[
+    {label:'CI Upper',data:xFit.map((xi,i)=>({x:xi,y:ciUpper[i]})),type:'line',borderColor:'transparent',backgroundColor:'rgba(37,99,235,0.1)',fill:'+1',pointRadius:0},
+    {label:'CI Lower',data:xFit.map((xi,i)=>({x:xi,y:ciLower[i]})),type:'line',borderColor:'transparent',fill:false,pointRadius:0},
+    {label:'Fit',data:xFit.map((xi,i)=>({x:xi,y:yFit[i]})),type:'line',borderColor:'#0d9488',pointRadius:0,tension:.3,backgroundColor:'transparent'},
+    {label:'Data',data:x.map((xi,i)=>({x:xi,y:yUse[i]})),backgroundColor:'#2563eb',pointRadius:5}
+  ]},options:{...baseChartOpts('Concentration','Value')}});
+  newChart('pred-chart2',{type:'bar',data:{labels:x.map(xi=>xi.toFixed(1)),datasets:[{label:'Residuals',data:residuals,backgroundColor:residuals.map(r=>r>0?'rgba(13,148,136,0.6)':'rgba(220,38,38,0.6)')}]},options:{...baseChartOpts('X','Residual')}});
+  newChart('pred-chart3',{type:'scatter',data:{datasets:[{label:'F₀/F',data:x.map((xi,i)=>({x:xi,y:svRatio[i]})),backgroundColor:'#ea6c00',pointRadius:5,showLine:true,tension:.3,borderColor:'#ea6c00'}]},options:{...baseChartOpts('Concentration','F₀/F')}});
+  appState.results.predictive={r2:fit.r2,Ksv:svFit.slope,se};
+  showRight('pred-right');
+}
+
+function runPrediction(){
+  if(!predModel){ flashGate(document.getElementById('pred-right')); runPredictive(); return; }
+  const q=parseFloat(v('pred-query')); if(isNaN(q)){ showToast('Enter a query concentration'); return; }
+  const {fit,modelType,se}=predModel;
+  const zMap={90:1.645,95:1.96,99:2.576};
+  const z=zMap[parseInt(document.getElementById('pred-conf').value)]||1.96;
+  const yPred=modelType==='poly2'?fit.predict(q):fit.slope*q+fit.intercept;
+  const box=document.getElementById('pred-result-box');
+  box.style.display='block';
+  box.innerHTML=`<strong>Predicted value at X=${q}:</strong> ${fmt(yPred,4)} ± ${fmt(z*se,4)} (${document.getElementById('pred-conf').value}% CI: ${fmt(yPred-z*se,4)} to ${fmt(yPred+z*se,4)})`;
+}
+
+// ============================================================
+// TAB 4: EEM HEATMAP
+// ============================================================
+const COLORMAPS={
+  Jet:(t)=>{ const r=t<0.5?0:Math.min(1,(t-0.5)*4),g=t<0.25?t*4:t<0.75?1:(1-t)*4,b=t<0.25?1:t<0.5?(0.5-t)*4:0; return [r*255,g*255,b*255]; },
+  Hot:(t)=>{ return [Math.min(1,t*3)*255,Math.min(1,Math.max(0,t*3-1))*255,Math.min(1,Math.max(0,t*3-2))*255]; },
+  Viridis:(t)=>{ const c=[[68,1,84],[72,40,120],[62,83,160],[49,120,190],[38,153,207],[31,184,219],[53,206,224],[110,224,191],[183,228,147],[253,231,37]]; const i=Math.min(8,Math.floor(t*9)),f=t*9-i; const a=c[i],b2=c[Math.min(9,i+1)]; return a.map((v,j)=>Math.round(v+(b2[j]-v)*f)); },
+  Plasma:(t)=>{ const c=[[13,8,135],[126,3,167],[204,71,120],[248,149,64],[240,249,33]]; const i=Math.min(3,Math.floor(t*4)),f=t*4-i; const a=c[i],b2=c[Math.min(4,i+1)]; return a.map((v,j)=>Math.round(v+(b2[j]-v)*f)); },
+  Cool:(t)=>{ return [Math.round(t*255),Math.round((1-t)*255),255]; }
+};
+
+function renderEEM(){
+  const raw=v('eem-data').split('\n').filter(l=>l.trim());
+  if(raw.length<2){ showToast('Paste EEM matrix'); return; }
+  const sep=raw[0].includes('\t')?'\t':',';
+  const rows=raw.map(l=>l.split(sep).map(s=>s.trim()));
+  const emWl=rows[0].slice(1).map(parseFloat).filter(v=>!isNaN(v));
+  const exWl=[], data=[];
+  for(let i=1;i<rows.length;i++){
+    const ex=parseFloat(rows[i][0]);
+    if(isNaN(ex)) continue;
+    exWl.push(ex);
+    data.push(rows[i].slice(1).map(parseFloat).map(v=>isNaN(v)?0:v));
+  }
+  if(!exWl.length||!emWl.length){ showToast('Invalid EEM format'); return; }
+  const interp=parseInt(document.getElementById('eem-interp').value)||1;
+  let flatVals=data.flat();
+  const minV=parseFloat(v('eem-min'))||Math.min(...flatVals);
+  const maxV=parseFloat(v('eem-max'))||Math.max(...flatVals);
+  const cmap=COLORMAPS[document.getElementById('eem-cmap').value]||COLORMAPS.Jet;
+  const W=emWl.length*interp, H=exWl.length*interp;
+  const canvas=document.getElementById('eem-canvas');
+  canvas.width=Math.min(W,600); canvas.height=Math.min(H,400);
+  const ctx=canvas.getContext('2d');
+  const imgData=ctx.createImageData(canvas.width,canvas.height);
+  for(let py=0;py<canvas.height;py++){
+    for(let px=0;px<canvas.width;px++){
+      const ei=Math.floor(px*emWl.length/canvas.width);
+      const xi=Math.floor(py*exWl.length/canvas.height);
+      const val=data[xi]?.[ei]??0;
+      const t=Math.min(1,Math.max(0,(val-minV)/(maxV-minV)));
+      const [r,g,b]=cmap(t);
+      const idx=(py*canvas.width+px)*4;
+      imgData.data[idx]=r;imgData.data[idx+1]=g;imgData.data[idx+2]=b;imgData.data[idx+3]=255;
+    }
+  }
+  ctx.putImageData(imgData,0,0);
+  const peak=Math.max(...flatVals);
+  document.getElementById('eem-peak-val').textContent=fmtE(peak);
+  // Colorbar
+  const cb=document.getElementById('eem-colorbar');
+  let cbHTML='<div style="height:200px;width:20px;border-radius:3px;overflow:hidden;display:flex;flex-direction:column-reverse">';
+  for(let i=0;i<200;i++){const t=i/199;const [r,g,b]=cmap(t);cbHTML+=`<div style="height:1px;background:rgb(${r},${g},${b})"></div>`;}
+  cbHTML+=`</div><div style="margin-top:2px">${fmtE(maxV)}</div><div style="margin-top:80px">${fmtE((minV+maxV)/2)}</div><div style="margin-top:80px">${fmtE(minV)}</div>`;
+  cb.innerHTML=cbHTML;
+  showRight('eem-right');
+}
+
+function exportEEMPNG(){
+  const c=document.getElementById('eem-canvas');
+  if(!c) return;
+  const a=document.createElement('a');a.download='eem_heatmap.png';a.href=c.toDataURL();a.click();
+}
+
+// ============================================================
+// TAB 5: BATCH
+// ============================================================
+let batchResults=[];
+function runBatch(){
+  const raw=v('batch-data').split('\n');
+  const prefix=v('batch-prefix')||'Sample';
+  const blocks=[];let cur=[];
+  raw.forEach(line=>{
+    if(line.trim()===''){if(cur.length){blocks.push(cur);cur=[];}}
+    else cur.push(line.trim());
+  });
+  if(cur.length) blocks.push(cur);
+  if(!blocks.length){ showToast('No data detected'); return; }
+  document.getElementById('batch-preview').style.display='block';
+  document.getElementById('batch-preview').textContent=`Detected ${blocks.length} sample(s)`;
+  const model=document.getElementById('batch-model').value;
+  batchResults=blocks.map((block,bi)=>{
+    let name=prefix+(bi+1);
+    const pairs=[];
+    block.forEach(line=>{
+      const isNum=!isNaN(parseFloat(line.split(/[\s,]+/)[0]));
+      if(!isNum){name=line;return;}
+      const parts=line.split(/[\s,]+/).map(parseFloat).filter(n=>!isNaN(n));
+      if(parts.length>=2) pairs.push(parts);
+    });
+    if(pairs.length<2) return null;
+    const x=pairs.map(p=>p[0]),y=pairs.map(p=>p[1]);
+    const y0=y[0];
+    const ratio=y.map(yi=>y0/yi);
+    const sv=calcSV(x,ratio);
+    const lr=linReg(x,y);
+    const sigma=Math.sqrt(y.reduce((a,yi,i)=>a+(yi-(lr.slope*x[i]+lr.intercept))**2,0)/y.length);
+    const lod=calcLOD(sigma,Math.abs(lr.slope));
+    return {name,n:x.length,Ksv:sv.Ksv,r2:sv.r2,lod};
+  }).filter(Boolean);
+  let tableHTML='<table class="data-table"><tr><th>Sample</th><th>n</th><th>Ksv</th><th>R²</th><th>LOD</th></tr>';
+  batchResults.forEach(r=>tableHTML+=`<tr><td>${r.name}</td><td>${r.n}</td><td>${fmtE(r.Ksv)}</td><td>${fmt(r.r2)}</td><td>${fmtE(r.lod)}</td></tr>`);
+  tableHTML+='</table>';
+  document.getElementById('batch-results-table-wrap').innerHTML=tableHTML;
+  newChart('batch-chart',{type:'bar',data:{labels:batchResults.map(r=>r.name),datasets:[{label:'Ksv',data:batchResults.map(r=>r.Ksv),backgroundColor:batchResults.map((_,i)=>ANALYTE_COLORS[i%ANALYTE_COLORS.length])}]},options:{...baseChartOpts('Sample','Ksv (M⁻¹)')}});
+  appState.results.batch=batchResults;
+  showRight('batch-right');
+}
+
+function exportBatchCSV(){
+  if(!batchResults.length) return;
+  exportCSV(['Sample','n','Ksv','R2','LOD'],batchResults.map(r=>[r.name,r.n,r.Ksv.toFixed(4),r.r2.toFixed(4),r.lod.toFixed(4)]));
+}
+
+// ============================================================
+// TAB 6: SELECTIVITY
+// ============================================================
+let selSlots=[],selSlotCtr=0;
+function addSelSlot(){
+  if(document.querySelectorAll('#sel-slots .analyte-slot').length>=15) return;
+  const i=selSlotCtr++;
+  selSlots.push(i);
+  const color=ANALYTE_COLORS[document.querySelectorAll('#sel-slots .analyte-slot').length%ANALYTE_COLORS.length];
+  const div=document.createElement('div');
+  div.className='analyte-slot';div.id='sel-slot-'+i;
+  div.innerHTML=`<div class="slot-header"><span class="color-dot" style="background:${color}"></span><input placeholder="Analyte name" id="sel-name-${i}" style="flex:1"><button class="btn-danger btn-sm" onclick="removeSelSlot(${i})">✕</button></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+    <div><label>F₀</label><input type="number" id="sel-f0-${i}" placeholder="Blank I"></div>
+    <div><label>F (with analyte)</label><input type="number" id="sel-f-${i}" placeholder="Signal I"></div>
+    <div><label>Conc. (μM)</label><input type="number" id="sel-c-${i}" placeholder="μM"></div>
+  </div>
+  <div><label>±SD (optional)</label><input type="number" id="sel-sd-${i}" placeholder="SD"></div>`;
+  document.getElementById('sel-slots').appendChild(div);
+  updateSelCount();
+}
+function removeSelSlot(i){ document.getElementById('sel-slot-'+i)?.remove(); selSlots=selSlots.filter(s=>s!==i); updateSelCount(); }
+function clearSelSlots(){ document.getElementById('sel-slots').innerHTML=''; selSlots=[];selSlotCtr=0; updateSelCount(); }
+function updateSelCount(){ const n=document.querySelectorAll('#sel-slots .analyte-slot').length; document.getElementById('sel-count').textContent=n+' / 15'; document.getElementById('sel-add-btn').disabled=n>=15; }
+
+function getSelRatio(f0,f,type){ if(type==='f0f') return f0/f; if(type==='dff0') return (f0-f)/f0; return f/f0; }
+
+function runSelectivity(){
+  const ratioType=document.getElementById('sel-ratio').value;
+  const targetName=v('sel-target').toLowerCase();
+  const data=[];
+  document.querySelectorAll('#sel-slots .analyte-slot').forEach(slot=>{
+    const i=parseInt(slot.id.split('-').pop());
+    const name=document.getElementById('sel-name-'+i)?.value||'Analyte';
+    const f0=parseFloat(document.getElementById('sel-f0-'+i)?.value);
+    const f=parseFloat(document.getElementById('sel-f-'+i)?.value);
+    const c=parseFloat(document.getElementById('sel-c-'+i)?.value)||0;
+    const sd=parseFloat(document.getElementById('sel-sd-'+i)?.value)||NaN;
+    if(!isNaN(f0)&&!isNaN(f)) data.push({name,f0,f,c,sd,ratio:getSelRatio(f0,f,ratioType),color:ANALYTE_COLORS[data.length%ANALYTE_COLORS.length]});
+  });
+  if(data.length<1){ showToast('Add analyte data'); return; }
+  const targetIdx=targetName?data.findIndex(d=>d.name.toLowerCase().includes(targetName)):0;
+  const tgt=data[targetIdx>=0?targetIdx:0];
+  const others=data.filter((_,i)=>i!==(targetIdx>=0?targetIdx:0));
+  const meanOthers=others.length?others.reduce((s,d)=>s+d.ratio,0)/others.length:1;
+  const best=data.reduce((a,b)=>b.ratio>a.ratio?b:a);
+  const worst=data.reduce((a,b)=>b.ratio<a.ratio?b:a);
+  document.getElementById('sel-stats').innerHTML=
+    statCard('Best Responder',best.name,`Ratio: ${fmt(best.ratio,3)}`)+
+    statCard('Worst Responder',worst.name,`Ratio: ${fmt(worst.ratio,3)}`)+
+    statCard('Target Ratio',fmt(tgt.ratio,3),tgt.name)+
+    statCard('Selectivity Factor',fmt(tgt.ratio/meanOthers,3),'Target / Mean others');
+  const bgColors=data.map(d=>d.name===tgt.name?'#0d9488':'#94a3b8');
+  const chartData={labels:data.map(d=>d.name),datasets:[{label:ratioType.toUpperCase(),data:data.map(d=>d.ratio),backgroundColor:bgColors,borderWidth:0}]};
+  if(data.some(d=>!isNaN(d.sd))){
+    chartData.datasets[0].errorBars=data.map(d=>({plus:isNaN(d.sd)?0:d.sd,minus:isNaN(d.sd)?0:d.sd}));
+  }
+  newChart('sel-chart1',{type:'bar',data:chartData,options:{...baseChartOpts('Analyte','Response Ratio')}});
+  // Heatmap
+  const maxR=Math.max(...data.map(d=>d.ratio));
+  const hCanvas=document.getElementById('sel-heatmap');
+  hCanvas.width=data.length*50;hCanvas.height=60;
+  const hCtx=hCanvas.getContext('2d');
+  data.forEach((d,i)=>{
+    const t=d.ratio/maxR;
+    const r=Math.round(255-(255-13)*t),g=Math.round(255-(255-148)*t),b=Math.round(255-(255-136)*t);
+    hCtx.fillStyle=`rgb(${r},${g},${b})`;
+    hCtx.fillRect(i*50,0,48,40);
+    hCtx.fillStyle='#333';hCtx.font='10px Space Mono,monospace';
+    hCtx.fillText(d.name.substring(0,5),i*50+2,55);
+  });
+  // Table
+  const rLabel={'f0f':'F₀/F','dff0':'ΔF/F₀','ff0':'F/F₀'}[ratioType];
+  let tableHTML=`<table class="data-table"><tr><th>Analyte</th><th>F₀</th><th>F</th><th>${rLabel}</th><th>ΔRatio vs blank</th><th>Sel. Factor</th></tr>`;
+  data.forEach(d=>tableHTML+=`<tr><td>${d.name}</td><td>${fmt(d.f0,1)}</td><td>${fmt(d.f,1)}</td><td>${fmt(d.ratio,4)}</td><td>${fmt(d.ratio-tgt.ratio,4)}</td><td>${fmt(d.ratio/meanOthers,3)}</td></tr>`);
+  tableHTML+='</table>';
+  document.getElementById('sel-table').innerHTML=tableHTML;
+  appState.results.selectivity=data;
+  showRight('sel-right');
+}
+
+function exportSelCSV(){
+  const ratioType=document.getElementById('sel-ratio').value;
+  const data=appState.results.selectivity||[];
+  exportCSV(['Analyte','F0','F','Ratio'],data.map(d=>[d.name,d.f0,d.f,d.ratio.toFixed(4)]));
+}
+
+// ============================================================
+// TAB 7: INTERFERENCE
+// ============================================================
+let intSlots=[],intSlotCtr=0;
+function addIntSlot(){
+  if(document.querySelectorAll('#int-slots .interferent-slot').length>=15) return;
+  const i=intSlotCtr++;
+  intSlots.push(i);
+  const div=document.createElement('div');
+  div.className='interferent-slot';div.id='int-slot-'+i;
+  div.innerHTML=`<div style="display:flex;align-items:center;gap:8px"><input placeholder="Interferent name" id="int-name-${i}" style="flex:1"><button class="btn-danger btn-sm" onclick="removeIntSlot(${i})">✕</button></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+    <div><label>[Analyte] (μM)</label><input type="number" id="int-ca-${i}" placeholder="10"></div>
+    <div><label>[Interferent] (μM)</label><input type="number" id="int-ci-${i}" placeholder="50"></div>
+    <div><label>F (analyte+interf.)</label><input type="number" id="int-fi-${i}" placeholder="Signal"></div>
+  </div>
+  <div><label>±SD (optional)</label><input type="number" id="int-sd-${i}" placeholder="SD"></div>`;
+  document.getElementById('int-slots').appendChild(div);
+  updateIntCount();
+}
+function removeIntSlot(i){ document.getElementById('int-slot-'+i)?.remove(); intSlots=intSlots.filter(s=>s!==i); updateIntCount(); }
+function clearIntSlots(){ document.getElementById('int-slots').innerHTML=''; intSlots=[];intSlotCtr=0; updateIntCount(); }
+function updateIntCount(){ const n=document.querySelectorAll('#int-slots .interferent-slot').length; document.getElementById('int-count').textContent=n+' / 15'; document.getElementById('int-add-btn').disabled=n>=15; }
+
+function runInterference(){
+  const f0=parseFloat(v('int-f0')); const fAlone=parseFloat(v('int-f-alone'));
+  const targetName=v('int-target-name')||'Target';
+  if(isNaN(f0)||isNaN(fAlone)){ showToast('Enter F₀ and F values for target'); return; }
+  const delta0=fAlone-f0;
+  const data=[];
+  document.querySelectorAll('#int-slots .interferent-slot').forEach(slot=>{
+    const i=parseInt(slot.id.split('-').pop());
+    const name=document.getElementById('int-name-'+i)?.value||'Int '+(i+1);
+    const ca=parseFloat(document.getElementById('int-ca-'+i)?.value)||0;
+    const ci=parseFloat(document.getElementById('int-ci-'+i)?.value)||0;
+    const fi=parseFloat(document.getElementById('int-fi-'+i)?.value);
+    const sd=parseFloat(document.getElementById('int-sd-'+i)?.value)||NaN;
+    if(!isNaN(fi)){
+      const ratio=delta0!==0?(fi-f0)/delta0:1;
+      const dev=(ratio-1)*100;
+      data.push({name,ca,ci,fi,ratio,dev,sd,status:Math.abs(dev)<10?'✓':Math.abs(dev)<20?'⚠':'✗'});
+    }
+  });
+  if(!data.length){ showToast('Add interferent data'); return; }
+  const pctOk=data.filter(d=>Math.abs(d.dev)<10).length/data.length*100;
+  const pctBad=data.filter(d=>Math.abs(d.dev)>20).length/data.length*100;
+  const worst=data.reduce((a,b)=>Math.abs(b.dev)>Math.abs(a.dev)?b:a);
+  document.getElementById('int-stats').innerHTML=
+    statCard('Interferents Tested',data.length)+
+    statCard('< 10% deviation',fmt(pctOk,1)+'%')+
+    statCard('> 20% deviation',fmt(pctBad,1)+'%')+
+    statCard('Worst Interferent',worst.name,fmt(worst.dev,1)+'%');
+  const bgColors=data.map(d=>Math.abs(d.dev)<10?'rgba(5,150,105,0.7)':Math.abs(d.dev)<20?'rgba(180,83,9,0.7)':'rgba(220,38,38,0.7)');
+  newChart('int-chart1',{type:'bar',data:{labels:[targetName,...data.map(d=>d.name)],datasets:[{label:'Interference Ratio',data:[1,...data.map(d=>d.ratio)],backgroundColor:['#0d9488',...bgColors]}]},options:baseChartOpts('Agent','Ratio')});
+  newChart('int-chart2',{type:'scatter',data:{datasets:[{label:'Interferents',data:data.map(d=>({x:d.ci,y:d.ratio})),backgroundColor:bgColors,pointRadius:7},{label:'Target ref',data:[{x:parseFloat(v('int-target-conc'))||0,y:1}],backgroundColor:'#0d9488',pointRadius:8}]},options:{...baseChartOpts('[Interferent] (μM)','Ratio')}});
+  const sorted=[...data].sort((a,b)=>Math.abs(b.dev)-Math.abs(a.dev));
+  newChart('int-chart3',{type:'bar',data:{labels:sorted.map(d=>d.name),datasets:[{label:'Deviation %',data:sorted.map(d=>d.dev),backgroundColor:sorted.map(d=>Math.abs(d.dev)<10?'rgba(5,150,105,0.7)':Math.abs(d.dev)<20?'rgba(180,83,9,0.7)':'rgba(220,38,38,0.7)')}]},options:{indexAxis:'y',...baseChartOpts('Deviation (%)','Agent')}});
+  let tableHTML=`<table class="data-table"><tr><th>Agent</th><th>[A] μM</th><th>[I] μM</th><th>F</th><th>Ratio</th><th>Dev %</th><th>Status</th></tr>`;
+  data.forEach(d=>tableHTML+=`<tr><td>${d.name}</td><td>${d.ca}</td><td>${d.ci}</td><td>${fmt(d.fi,1)}</td><td>${fmt(d.ratio,4)}</td><td>${fmt(d.dev,2)}</td><td class="${d.status==='✓'?'status-ok':d.status==='⚠'?'status-warn':'status-err'}">${d.status}</td></tr>`);
+  tableHTML+='</table>';
+  document.getElementById('int-table').innerHTML=tableHTML;
+  appState.results.interference=data;
+  showRight('int-right');
+}
+
+function exportIntCSV(){
+  const data=appState.results.interference||[];
+  exportCSV(['Agent','[A] uM','[I] uM','F','Ratio','Dev%','Status'],data.map(d=>[d.name,d.ca,d.ci,d.fi.toFixed(2),d.ratio.toFixed(4),d.dev.toFixed(2),d.status]));
+}
+
+// ============================================================
+// TAB 8: ADVANCED CALCS
+// ============================================================
+// SV
+function runSV(){
+  const x=parseCol(v('sv-x')), rawY=parseCol(v('sv-y'));
+  if(x.length<3||x.length!==rawY.length){ showToast('Need at least 3 matched points'); return; }
+  const f0=parseFloat(v('sv-f0'))||rawY[0];
+  const y=rawY.map(yi=>f0/yi); // F0/F
+  const model=document.getElementById('sv-model').value;
+  const tau0=parseFloat(v('sv-tau'))||10;
+  let Ksv,r2,fitY,typeStr;
+  if(model==='linear'||model==='modified'){
+    const lr=linReg(x,y);Ksv=lr.slope;r2=lr.r2;fitY=x.map(xi=>lr.slope*xi+lr.intercept);
+    typeStr=r2>0.98?'Linear (single mode — dynamic or static)':'Non-linear (possible mixed quenching)';
+  } else {
+    // bimodal: F0/F = (1+Ksv1*c)(1+Ksv2*c), linearise as approx
+    const lr=linReg(x,y);Ksv=lr.slope;r2=lr.r2;fitY=x.map(xi=>lr.slope*xi+lr.intercept);
+    typeStr='Bimodal SV (combined static+dynamic quenching)';
+  }
+  const kq=Ksv/(tau0*1e-9);
+  document.getElementById('sv-stats').innerHTML=
+    statCard('Ksv',fmtE(Ksv),'M⁻¹')+statCard('R²',fmt(r2))+statCard('Type',typeStr.split('(')[0].trim())+statCard('kq',fmtE(kq),'M⁻¹s⁻¹');
+  document.getElementById('sv-interp').textContent=typeStr.includes('Linear')?'Linear SV → single quenching mode (dynamic or static).':'Upward curvature → combined static + dynamic quenching.';
+  newChart('sv-chart1',{type:'scatter',data:{datasets:[
+    {label:'F₀/F',data:x.map((xi,i)=>({x:xi,y:y[i]})),backgroundColor:'#0d9488',pointRadius:5},
+    {label:'SV Fit',data:x.map((xi,i)=>({x:xi,y:fitY[i]})),type:'line',borderColor:'#2563eb',backgroundColor:'transparent',pointRadius:0,tension:.3}
+  ]},options:{...baseChartOpts('Concentration','F₀/F')}});
+  appState.results.sv={Ksv,r2,kq,type:typeStr};
+  showRight('sv-right');
+}
+
+// BH
+function runBH(){
+  const H=parseCol(v('bh-h')), dF=parseCol(v('bh-f'));
+  if(H.length<3||H.length!==dF.length){ showToast('Need at least 3 matched points'); return; }
+  const model=document.getElementById('bh-model').value;
+  const f0=parseFloat(v('bh-f0'))||0;
+  // 1:1 BH: 1/ΔF = 1/ΔFmax + 1/(Ka·ΔFmax·[G])
+  const invDF=dF.map(v=>1/v), invH=H.map(h=>1/h);
+  const lr=linReg(invH,invDF);
+  const Ka=lr.intercept/lr.slope;
+  const dFmax=1/lr.intercept;
+  document.getElementById('bh-stats').innerHTML=
+    statCard('Ka (M⁻¹)',fmtE(Ka))+statCard('R² (BH)',fmt(lr.r2))+statCard('ΔF_max',fmt(dFmax,2))+statCard('Model',model);
+  newChart('bh-chart1',{type:'scatter',data:{datasets:[
+    {label:'1/ΔF vs 1/[H]',data:invH.map((xi,i)=>({x:xi,y:invDF[i]})),backgroundColor:'#7c3aed',pointRadius:5},
+    {label:'BH Fit',data:invH.map((xi,i)=>({x:xi,y:lr.slope*xi+lr.intercept})),type:'line',borderColor:'#0d9488',backgroundColor:'transparent',pointRadius:0}
+  ]},options:{...baseChartOpts('1/[H]','1/ΔF')}});
+  newChart('bh-chart2',{type:'scatter',data:{datasets:[
+    {label:'Binding Isotherm',data:H.map((xi,i)=>({x:xi,y:dF[i]})),backgroundColor:'#ea6c00',pointRadius:5,showLine:true,borderColor:'#ea6c00',tension:.3}
+  ]},options:{...baseChartOpts('[H]','ΔF')}});
+  appState.results.bh={Ka,r2:lr.r2,dFmax};
+  showRight('bh-right');
+}
+
+// LOD
+let lodBlanks=[];
+function addLODBlank(){
+  const container=document.getElementById('lod-blanks');
+  const count=container.querySelectorAll('.lod-blank-row').length;
+  if(count>=5){ showToast('Max 5 blanks'); return; }
+  const div=document.createElement('div');
+  div.className='lod-blank-row';
+  div.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:6px';
+  div.innerHTML='<input placeholder="Label" style="flex:1"><input type="number" class="lod-blank-val" placeholder="Intensity" style="flex:1"><button class="btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>';
+  container.appendChild(div);
+}
+function runLOD(){
+  const vals=[...document.querySelectorAll('.lod-blank-val')].map(el=>parseFloat(el.value)).filter(n=>!isNaN(n));
+  if(vals.length<2){ showToast('Add at least 2 blank values'); return; }
+  const mean=vals.reduce((a,b)=>a+b)/vals.length;
+  const sigma=Math.sqrt(vals.reduce((a,v)=>a+(v-mean)**2,0)/(vals.length-1));
+  let slope=parseFloat(v('lod-slope'));
+  const slopeSrc=document.getElementById('lod-slope-src').value;
+  if(slopeSrc==='tab1'&&appState.results.generator?.lr) slope=appState.results.generator.lr.slope;
+  if(slopeSrc==='sv'&&appState.results.sv?.Ksv) slope=appState.results.sv.Ksv;
+  if(isNaN(slope)||slope===0){ showToast('Enter a valid slope'); return; }
+  const lod=calcLOD(sigma,slope);
+  const loq=calcLOQ(sigma,slope);
+  const unit=document.getElementById('lod-unit').value;
+  document.getElementById('lod-stats').innerHTML=
+    statCard('F̄₀ (Mean blank)',fmt(mean,2))+statCard('σ (SD)',fmt(sigma,4))+
+    statCard('LOD',fmtE(lod)+' '+unit,'3σ/slope')+statCard('LOQ',fmtE(loq)+' '+unit,'10σ/slope')+
+    statCard('Slope (sens.)',fmtE(slope));
+  document.getElementById('lod-breakdown').innerHTML=`<table class="data-table"><tr><th>Parameter</th><th>Formula</th><th>Value</th></tr>
+    <tr><td>Mean Blank (F̄₀)</td><td>Σx/n</td><td>${fmt(mean,4)}</td></tr>
+    <tr><td>SD (σ)</td><td>√(Σ(x-F̄₀)²/(n-1))</td><td>${fmt(sigma,6)}</td></tr>
+    <tr><td>Slope (S)</td><td>From fit</td><td>${fmtE(slope)}</td></tr>
+    <tr><td>LOD</td><td>3σ/S</td><td>${fmtE(lod)} ${unit}</td></tr>
+    <tr><td>LOQ</td><td>10σ/S</td><td>${fmtE(loq)} ${unit}</td></tr></table>`;
+  appState.results.lod={mean,sigma,lod,loq,slope,unit};
+  showRight('lod-right');
+}
+function copyLOD(){
+  const r=appState.results.lod;
+  if(!r) return;
+  const txt=`LOD/LOQ Results\nMean Blank (F0): ${r.mean.toFixed(4)}\nSD (sigma): ${r.sigma.toFixed(6)}\nSlope: ${r.slope}\nLOD: ${r.lod.toFixed(4)} ${r.unit}\nLOQ: ${r.loq.toFixed(4)} ${r.unit}`;
+  navigator.clipboard.writeText(txt).then(()=>showToast('Copied!'));
+}
+
+// Binding Constant
+let bcDatasets=[],bcDatasetCtr=0;
+function addBCDataset(){
+  if(document.querySelectorAll('#bc-datasets [id^="bc-ds-"]').length>=5) return;
+  const i=bcDatasetCtr++;
+  bcDatasets.push(i);
+  const div=document.createElement('div');
+  div.className='card';div.style.padding='14px';div.id='bc-ds-'+i;
+  div.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><input placeholder="Dataset ${i+1} label" id="bc-lbl-${i}" style="flex:1"><button class="btn-danger btn-sm" onclick="this.closest('.card').remove()">✕</button></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div><div class="count-badge-wrap"><label>X ([Guest])</label><span class="badge muted" id="bc-cx-${i}">0</span></div><textarea id="bc-x-${i}" rows="5" oninput="cntTA('bc-x-${i}','bc-cx-${i}')"></textarea></div>
+    <div><div class="count-badge-wrap"><label>ΔF or F</label><span class="badge muted" id="bc-cy-${i}">0</span></div><textarea id="bc-y-${i}" rows="5" oninput="cntTA('bc-y-${i}','bc-cy-${i}')"></textarea></div>
+    <div><label>F₀ (blank)</label><input type="number" id="bc-f0-${i}" placeholder="0"></div>
+    <div><label>F_max (0=auto)</label><input type="number" id="bc-fm-${i}" value="0"></div>
+  </div>`;
+  document.getElementById('bc-datasets').appendChild(div);
+}
+function runBC(){
+  const model=document.getElementById('bc-model').value;
+  const results=[];
+  document.querySelectorAll('#bc-datasets [id^="bc-ds-"]').forEach(ds=>{
+    const i=parseInt(ds.id.split('-').pop());
+    const x=parseCol(document.getElementById('bc-x-'+i)?.value||'');
+    const y=parseCol(document.getElementById('bc-y-'+i)?.value||'');
+    const f0=parseFloat(document.getElementById('bc-f0-'+i)?.value)||0;
+    const fmax=parseFloat(document.getElementById('bc-fm-'+i)?.value)||0;
+    const lbl=document.getElementById('bc-lbl-'+i)?.value||'Dataset '+(i+1);
+    if(x.length<3||x.length!==y.length) return;
+    const dF=y.map(yi=>yi-f0);
+    const dFmax=fmax||Math.max(...dF);
+    const normDF=dF.map(v=>v/dFmax);
+    // 1:1 Langmuir: theta=Ka*x/(1+Ka*x), linearise: x/dF = x/dFmax + 1/(Ka*dFmax)
+    const inv=x.map((xi,i)=>xi/dF[i]);
+    const lr=linReg(x,inv);
+    const Ka=lr.slope>0?1/(lr.intercept/lr.slope):NaN; // Ka = slope intercept ratio method
+    const lr2=linReg(x.map(xi=>1/xi),dF.map(v=>1/v));
+    const Ka2=lr2.intercept>0?lr2.slope/lr2.intercept:NaN;
+    results.push({label:lbl,Ka:Math.abs(Ka2),r2:lr2.r2,n:1,dFmax,normDF,x,color:ANALYTE_COLORS[results.length]});
+  });
+  if(!results.length){ showToast('Add dataset data'); return; }
+  const meanKa=results.reduce((s,r)=>s+r.Ka,0)/results.length;
+  const sdKa=Math.sqrt(results.reduce((s,r)=>s+(r.Ka-meanKa)**2,0)/results.length);
+  document.getElementById('bc-stats').innerHTML=results.map(r=>statCard(r.label+' Ka',fmtE(r.Ka),'R²: '+fmt(r.r2))).join('')+
+    statCard('Mean Ka',fmtE(meanKa),'±'+fmtE(sdKa));
+  const xMax=Math.max(...results.flatMap(r=>r.x));
+  const xFit=Array.from({length:100},(_,i)=>i*xMax/99);
+  newChart('bc-chart1',{type:'line',data:{datasets:results.map(r=>({label:r.label,data:r.x.map((xi,i)=>({x:xi/r.x[r.x.length-1],y:r.normDF[i]})),borderColor:r.color,backgroundColor:'transparent',pointRadius:4,tension:.3}))},options:{...baseChartOpts('Normalised [Guest]','ΔF/ΔF_max')}});
+  let tableHTML=`<table class="data-table"><tr><th>Dataset</th><th>Ka (M⁻¹)</th><th>n</th><th>R²</th><th>ΔF_max</th></tr>`;
+  results.forEach(r=>tableHTML+=`<tr><td>${r.label}</td><td>${fmtE(r.Ka)}</td><td>${r.n}</td><td>${fmt(r.r2)}</td><td>${fmt(r.dFmax,2)}</td></tr>`);
+  tableHTML+=`<tr style="font-weight:700"><td>Mean</td><td>${fmtE(meanKa)} ± ${fmtE(sdKa)}</td><td>—</td><td>—</td><td>—</td></tr></table>`;
+  document.getElementById('bc-table').innerHTML=tableHTML;
+  appState.results.bc=results;
+  showRight('bc-right');
+}
+
+// Titration Builder
+let titSlots=[],titSlotCtr=0;
+function addTitSlot(){
+  if(document.querySelectorAll('#tit-slots [id^="tit-slot-"]').length>=6) return;
+  const i=titSlotCtr++;
+  titSlots.push(i);
+  const color=ANALYTE_COLORS[i];
+  const div=document.createElement('div');
+  div.className='analyte-slot';div.id='tit-slot-'+i;
+  div.innerHTML=`<div class="slot-header"><input type="color" id="tit-color-${i}" value="${color}" style="width:28px;height:28px;padding:2px;border-radius:50%;cursor:pointer"><input placeholder="Series ${i+1}" id="tit-sname-${i}" style="flex:1"><button class="btn-danger btn-sm" onclick="removeTitSlot(${i})">✕</button></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div><div class="count-badge-wrap"><label>X</label><span class="badge muted" id="tit-cx-${i}">0</span></div><textarea id="tit-x-${i}" rows="4" oninput="cntTA('tit-x-${i}','tit-cx-${i}')"></textarea></div>
+    <div><div class="count-badge-wrap"><label>Y</label><span class="badge muted" id="tit-cy-${i}">0</span></div><textarea id="tit-y-${i}" rows="4" oninput="cntTA('tit-y-${i}','tit-cy-${i}')"></textarea></div>
+  </div>
+  <div><label>Wavelength (nm, optional)</label><input id="tit-wl-${i}" placeholder="e.g. 520"></div>`;
+  document.getElementById('tit-slots').appendChild(div);
+  document.getElementById('tit-count').textContent=document.querySelectorAll('#tit-slots [id^="tit-slot-"]').length+'/6';
+  document.getElementById('tit-add-btn').disabled=document.querySelectorAll('#tit-slots [id^="tit-slot-"]').length>=6;
+}
+function removeTitSlot(i){ document.getElementById('tit-slot-'+i)?.remove(); titSlots=titSlots.filter(s=>s!==i); }
+
+function runTitration(){
+  const datasets=[];
+  document.querySelectorAll('#tit-slots [id^="tit-slot-"]').forEach(slot=>{
+    const i=parseInt(slot.id.split('-').pop());
+    const x=parseCol(document.getElementById('tit-x-'+i)?.value||'');
+    let y=parseCol(document.getElementById('tit-y-'+i)?.value||'');
+    const name=document.getElementById('tit-sname-'+i)?.value||'Series '+(i+1);
+    const color=document.getElementById('tit-color-'+i)?.value||ANALYTE_COLORS[i];
+    if(x.length<2||y.length<2||x.length!==y.length) return;
+    if(document.getElementById('tit-norm').checked&&y[0]!==0) y=y.map(yi=>yi/y[0]);
+    const lr=linReg(x,y);
+    // inflection: numerical derivative peak
+    const dy=y.slice(1).map((yi,i)=>(yi-y[i])/(x[i+1]-x[i]));
+    const inflIdx=dy.reduce((mi,v,i)=>Math.abs(v)>Math.abs(dy[mi])?i:mi,0);
+    const inflX=x[inflIdx+1];
+    datasets.push({name,x,y,color,lr,inflX,wl:document.getElementById('tit-wl-'+i)?.value});
+  });
+  if(!datasets.length){ showToast('Add series data'); return; }
+  const xl=v('tit-xlabel'),yl=v('tit-ylabel');
+  const smooth=document.getElementById('tit-smooth').checked;
+  const showPts=document.getElementById('tit-pts').checked;
+  document.getElementById('tit-chart-title').textContent=v('tit-title')||'Titration Chart';
+  newChart('tit-chart-main',{type:'line',data:{datasets:datasets.map(d=>({label:d.name,data:d.x.map((xi,i)=>({x:xi,y:d.y[i]})),borderColor:d.color,backgroundColor:'transparent',pointRadius:showPts?4:0,tension:smooth?.4:0}))},options:{...baseChartOpts(xl,yl),plugins:{legend:{position:document.getElementById('tit-legend').value}}}});
+  // Mini charts
+  const miniWrap=document.getElementById('tit-mini-charts');
+  miniWrap.innerHTML='';
+  datasets.forEach((d,i)=>{
+    const div=document.createElement('div');
+    div.className='card';div.style.padding='12px';
+    div.innerHTML=`<div class="section-title" style="color:${d.color}">${d.name}</div><div class="stat-grid" style="margin-bottom:8px">${statCard('n',d.x.length)+statCard('Range',fmt(Math.min(...d.y),2)+' – '+fmt(Math.max(...d.y),2))+statCard('Inflection X',fmtE(d.inflX))}</div><div class="chart-wrap" style="margin:0"><canvas id="tit-mini-${i}" height="100"></canvas></div>`;
+    miniWrap.appendChild(div);
+    newChart('tit-mini-'+i,{type:'line',data:{datasets:[{label:d.name,data:d.x.map((xi,j)=>({x:xi,y:d.y[j]})),borderColor:d.color,backgroundColor:d.color+'22',fill:true,pointRadius:2,tension:.3}]},options:{...baseChartOpts(xl,yl),plugins:{legend:{display:false}}}});
+  });
+  let tableHTML=`<table class="data-table"><tr><th>Series</th><th>n</th><th>Y_min</th><th>Y_max</th><th>ΔY</th><th>Inflection X</th></tr>`;
+  datasets.forEach(d=>tableHTML+=`<tr><td>${d.name}</td><td>${d.x.length}</td><td>${fmt(Math.min(...d.y),3)}</td><td>${fmt(Math.max(...d.y),3)}</td><td>${fmt(Math.max(...d.y)-Math.min(...d.y),3)}</td><td>${fmtE(d.inflX)}</td></tr>`);
+  tableHTML+='</table>';
+  document.getElementById('tit-table').innerHTML=tableHTML;
+  appState.results.titration=datasets;
+  showRight('tit-right');
+}
+function exportTitCSV(){
+  const datasets=appState.results.titration||[];
+  if(!datasets.length) return;
+  const maxLen=Math.max(...datasets.map(d=>d.x.length));
+  const headers=['Index',...datasets.flatMap(d=>[d.name+'_X',d.name+'_Y'])];
+  const rows=Array.from({length:maxLen},(_,i)=>[i+1,...datasets.flatMap(d=>[d.x[i]??'',d.y[i]??''])]);
+  exportCSV(headers,rows);
+}
+
+// ============================================================
+// TAB 9: STABILITY
+// ============================================================
+function setStabMode(m){
+  document.getElementById('stab-time-btn').classList.toggle('active',m==='time');
+  document.getElementById('stab-cond-btn').classList.toggle('active',m==='cond');
+}
+function clearStab(){['stab-a-x','stab-a-y','stab-b-x','stab-b-y'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';el.classList.remove('filled');}});}
+
+function runStability(){
+  const axRaw=parseCol(v('stab-a-x')),ayRaw=parseCol(v('stab-a-y'));
+  const bxRaw=parseCol(v('stab-b-x')),byRaw=parseCol(v('stab-b-y'));
+  if(axRaw.length<2||ayRaw.length<2){ showToast('Add data for Probe alone'); return; }
+  if(bxRaw.length<2||byRaw.length<2){ showToast('Add data for Probe + Analyte'); return; }
+  const norm=document.getElementById('stab-norm').checked;
+  const thresh=parseFloat(v('stab-thresh'))||90;
+  const ax=axRaw,bx=bxRaw;
+  const ay=norm?ayRaw.map(v=>v/ayRaw[0]*100):ayRaw;
+  const by=norm?byRaw.map(v=>v/byRaw[0]*100):byRaw;
+  const aI0=ay[0],aIf=ay[ay.length-1];
+  const bI0=by[0],bIf=by[by.length-1];
+  const aTrend=Math.abs(aIf-aI0)<3?'stable':aIf>aI0?'rising':'declining';
+  const bTrend=Math.abs(bIf-bI0)<3?'stable':bIf>bI0?'rising':'declining';
+  const aLabelTxt=v('stab-a-label')||'Probe alone';
+  const bLabelTxt=v('stab-b-label')||'Probe + Analyte';
+  // Stability window: last x where both stay above threshold
+  let stabWin='N/A';
+  if(norm){
+    const aBelow=ax.findIndex((_,i)=>ay[i]<thresh);
+    const bBelow=bx.findIndex((_,i)=>by[i]<thresh);
+    if(aBelow<0&&bBelow<0) stabWin='Full range';
+    else stabWin=String(Math.min(aBelow>=0?ax[aBelow-1]:Infinity,bBelow>=0?bx[bBelow-1]:Infinity));
+  }
+  const xlabel=v('stab-xlabel'), ylabel=v('stab-ylabel');
+  document.getElementById('stab-stats').innerHTML=
+    statCard(aLabelTxt+' I₀',fmt(aI0,1))+statCard(aLabelTxt+' Final',fmt(aIf,1))+
+    statCard(aLabelTxt+' % Retention',fmt(norm?aIf:aIf/aI0*100,1)+'%',aTrend)+
+    statCard(bLabelTxt+' I₀',fmt(bI0,1))+statCard(bLabelTxt+' Final',fmt(bIf,1))+
+    statCard(bLabelTxt+' % Retention',fmt(norm?bIf:bIf/bI0*100,1)+'%',bTrend)+
+    statCard('Stability Window',stabWin,'above '+thresh+'%');
+  newChart('stab-chart1',{type:'line',data:{datasets:[
+    {label:aLabelTxt,data:ax.map((xi,i)=>({x:xi,y:ay[i]})),borderColor:'#0d9488',backgroundColor:'rgba(13,148,136,0.1)',fill:false,pointRadius:4,tension:.3},
+    {label:bLabelTxt,data:bx.map((xi,i)=>({x:xi,y:by[i]})),borderColor:'#ea6c00',backgroundColor:'rgba(234,108,0,0.1)',fill:false,pointRadius:4,tension:.3},
+    ...(norm?[{label:thresh+'% threshold',data:ax.map(xi=>({x:xi,y:thresh})),borderColor:'#dc2626',borderDash:[6,4],pointRadius:0,backgroundColor:'transparent'}]:[])
+  ]},options:{...baseChartOpts(xlabel,ylabel)}});
+  const adelta=ay.map(yi=>(yi/ay[0]-1)*100), bdelta=by.map(yi=>(yi/by[0]-1)*100);
+  newChart('stab-chart2',{type:'line',data:{datasets:[
+    {label:aLabelTxt,data:ax.map((xi,i)=>({x:xi,y:adelta[i]})),borderColor:'#0d9488',fill:false,pointRadius:4,tension:.3},
+    {label:bLabelTxt,data:bx.map((xi,i)=>({x:xi,y:bdelta[i]})),borderColor:'#ea6c00',fill:false,pointRadius:4,tension:.3},
+    {label:'Zero',data:ax.map(xi=>({x:xi,y:0})),borderColor:'#94a3b8',borderDash:[4,4],pointRadius:0}
+  ]},options:{...baseChartOpts(xlabel,'ΔI/I₀ (%)')}});
+  const len=Math.max(ax.length,bx.length);
+  let tableHTML=`<table class="data-table"><tr><th>${xlabel}</th><th>${aLabelTxt} I</th><th>%</th><th>${bLabelTxt} I</th><th>%</th></tr>`;
+  for(let i=0;i<len;i++) tableHTML+=`<tr><td>${ax[i]??''}</td><td>${fmt(norm?ay[i]/100*ayRaw[0]:ayRaw[i],2)}</td><td>${fmt(ay[i],1)}</td><td>${fmt(norm?by[i]/100*byRaw[0]:byRaw[i],2)}</td><td>${fmt(by[i],1)}</td></tr>`;
+  tableHTML+='</table>';
+  document.getElementById('stab-table').innerHTML=tableHTML;
+  document.getElementById('stab-interp').textContent=`${aLabelTxt} retains ${fmt(norm?aIf:aIf/aI0*100,1)}% intensity over the study range; ${bLabelTxt} retains ${fmt(norm?bIf:bIf/bI0*100,1)}%, indicating ${Math.abs(aIf-bIf)<5?'stable':'variable'} sensing performance.`;
+  appState.results.stability={ay,by,ax,bx};
+  showRight('stab-right');
+}
+function exportStabCSV(){
+  const r=appState.results.stability;
+  if(!r) return;
+  const len=Math.max(r.ax.length,r.bx.length);
+  exportCSV(['X_A','Y_A','X_B','Y_B'],Array.from({length:len},(_,i)=>[r.ax[i]??'',r.ay[i]??'',r.bx[i]??'',r.by[i]??'']));
+}
+
+// ============================================================
+// TAB 10: FRET
+// ============================================================
+function runUVVis(){
+  const dwl=parseCol(v('uv-d-wl')),dabs=parseCol(v('uv-d-abs'));
+  const awl=parseCol(v('uv-a-wl')),aabs=parseCol(v('uv-a-abs'));
+  if(!dwl.length||!dabs.length){ showToast('Enter donor UV-Vis data'); return; }
+  const dMax=Math.max(...dabs), aMax=Math.max(...aabs)||1;
+  const dLambdaMax=dwl[dabs.indexOf(dMax)];
+  const aLambdaMax=awl.length?awl[aabs.indexOf(Math.max(...aabs))]:NaN;
+  document.getElementById('uv-stats').innerHTML=
+    statCard('λ_max Donor',fmt(dLambdaMax,1)+' nm')+
+    (aLambdaMax?statCard('λ_max Acceptor',fmt(aLambdaMax,1)+' nm'):'')+
+    statCard('ε_max Donor',v('uv-d-eps')||'—',' M⁻¹cm⁻¹')+
+    statCard('ε_max Acceptor',v('uv-a-eps')||'—',' M⁻¹cm⁻¹');
+  const datasets=[{label:'Donor',data:dwl.map((xi,i)=>({x:xi,y:dabs[i]})),borderColor:'#0d9488',backgroundColor:'rgba(13,148,136,0.1)',fill:true,pointRadius:0,tension:.3}];
+  if(awl.length&&aabs.length) datasets.push({label:'Acceptor',data:awl.map((xi,i)=>({x:xi,y:aabs[i]})),borderColor:'#ea6c00',backgroundColor:'rgba(234,108,0,0.1)',fill:true,pointRadius:0,tension:.3});
+  newChart('uv-chart1',{type:'line',data:{datasets},options:{...baseChartOpts('Wavelength (nm)','Absorbance')}});
+  appState.results.uvvis={dLambdaMax,aLambdaMax,dwl,dabs,awl,aabs};
+  showRight('uv-right');
+}
+
+function runEE(){
+  const dExWl=parseCol(v('ee-d-ex-wl')), dExI=parseCol(v('ee-d-ex-i'));
+  const aExWl=parseCol(v('ee-a-ex-wl')), aExI=parseCol(v('ee-a-ex-i'));
+  const dEmWl=parseCol(v('ee-d-em-wl')), dEmI=parseCol(v('ee-d-em-i'));
+  const aEmWl=parseCol(v('ee-a-em-wl')), aEmI=parseCol(v('ee-a-em-i'));
+  if(!dExWl.length||!dExI.length){ showToast('Enter at least donor excitation data'); return; }
+  const dExMax=dExWl[dExI.indexOf(Math.max(...dExI))];
+  const dEmMax=dEmWl.length?dEmWl[dEmI.indexOf(Math.max(...dEmI))]:NaN;
+  const stokes=!isNaN(dEmMax)&&!isNaN(dExMax)?dEmMax-dExMax:NaN;
+  document.getElementById('ee-stats').innerHTML=
+    statCard('Donor Ex Peak',fmt(dExMax,1)+' nm')+
+    (dEmMax?statCard('Donor Em Peak',fmt(dEmMax,1)+' nm'):'')+
+    (!isNaN(stokes)?statCard('Stokes Shift',fmt(stokes,1)+' nm'):'');
+  const exDS=[{label:'Donor Ex',data:dExWl.map((xi,i)=>({x:xi,y:dExI[i]})),borderColor:'#0d9488',fill:false,pointRadius:0,tension:.3}];
+  if(aExWl.length) exDS.push({label:'Acceptor Ex',data:aExWl.map((xi,i)=>({x:xi,y:aExI[i]})),borderColor:'#ea6c00',fill:false,pointRadius:0,tension:.3});
+  newChart('ee-chart1',{type:'line',data:{datasets:exDS},options:{...baseChartOpts('Wavelength (nm)','Intensity')}});
+  const emDS=[{label:'Donor Em',data:dEmWl.map((xi,i)=>({x:xi,y:dEmI[i]})),borderColor:'#0d9488',fill:false,pointRadius:0,tension:.3}];
+  if(aEmWl.length) emDS.push({label:'Acceptor Em',data:aEmWl.map((xi,i)=>({x:xi,y:aEmI[i]})),borderColor:'#ea6c00',fill:false,pointRadius:0,tension:.3});
+  newChart('ee-chart2',{type:'line',data:{datasets:emDS},options:{...baseChartOpts('Wavelength (nm)','Intensity')}});
+  showRight('ee-right');
+}
+
+let flSlots=[],flSlotCtr=0;
+function addFLSlot(){
+  if(document.querySelectorAll('#fl-conc-slots [id^="fl-"]').length>=6) return;
+  const i=flSlotCtr++;
+  flSlots.push(i);
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;gap:8px;align-items:center;margin-top:8px';
+  div.innerHTML=`<div style="flex:1"><label>[Acc] ${i+1} (μM)</label><input type="number" id="fl-conc-${i}" placeholder="Concentration"></div><div style="flex:2"><label>F_DA Intensity</label><textarea id="fl-da-${i}" rows="3"></textarea></div><button class="btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button>`;
+  document.getElementById('fl-conc-slots').appendChild(div);
+}
+
+function runFL(){
+  const wl=parseCol(v('fl-wl'));
+  const fd=parseCol(v('fl-fd'));
+  if(!wl.length||!fd.length){ showToast('Enter wavelength and donor data'); return; }
+  const slots=[]; let idx=0;
+  while(document.getElementById('fl-conc-'+idx)){
+    const conc=parseFloat(document.getElementById('fl-conc-'+idx)?.value)||0;
+    const da=parseCol(document.getElementById('fl-da-'+idx)?.value||'');
+    if(da.length===fd.length) slots.push({conc,da});
+    idx++;
+  }
+  const datasets=[{label:'F_Donor',data:wl.map((xi,i)=>({x:xi,y:fd[i]})),borderColor:'#0d9488',fill:false,pointRadius:0,tension:.3}];
+  const effTable=[];
+  slots.forEach((s,si)=>{
+    datasets.push({label:`F_DA [${s.conc}μM]`,data:wl.map((xi,i)=>({x:xi,y:s.da[i]})),borderColor:ANALYTE_COLORS[si+1],fill:false,pointRadius:0,tension:.3});
+    const fdSum=fd.reduce((a,b)=>a+b,0), daSum=s.da.reduce((a,b)=>a+b,0);
+    const E=1-daSum/fdSum;
+    effTable.push({conc:s.conc,fdSum,daSum,E});
+  });
+  newChart('fl-chart1',{type:'line',data:{datasets},options:{...baseChartOpts('Wavelength (nm)','Intensity')}});
+  newChart('fl-chart2',{type:'scatter',data:{datasets:[{label:'E (%)',data:effTable.map(r=>({x:r.conc,y:r.E*100})),backgroundColor:'#7c3aed',pointRadius:7,showLine:true,borderColor:'#7c3aed',tension:.3}]},options:{...baseChartOpts('[Acceptor] (μM)','E (%)')}});
+  let tableHTML=`<table class="data-table"><tr><th>[Acc] μM</th><th>ΣF_D</th><th>ΣF_DA</th><th>E (%)</th></tr>`;
+  effTable.forEach(r=>tableHTML+=`<tr><td>${r.conc}</td><td>${fmt(r.fdSum,0)}</td><td>${fmt(r.daSum,0)}</td><td>${fmt(r.E*100,2)}</td></tr>`);
+  tableHTML+='</table>';
+  document.getElementById('fl-table').innerHTML=tableHTML;
+  appState.results.flData={effTable};
+  showRight('fl-right');
+}
+
+function calcFRET(){
+  const phi=parseFloat(v('fret-phi'))||0.3;
+  const n=parseFloat(v('fret-n'))||1.4;
+  const kappa2=parseFloat(v('fret-kappa'))||2/3;
+  const r=parseFloat(v('fret-r'))||NaN;
+  let J=parseFloat(v('fret-J'));
+  const Edata=parseFloat(v('fret-E'));
+  // Auto-calc J from UV-Vis + FL data if available
+  if(isNaN(J)||J===0){
+    const uvr=appState.results.uvvis;
+    const flr=appState.results.flData;
+    if(uvr&&uvr.dwl.length){
+      // Simple trapezoidal: J = sum(I_D(λ)*ε_A(λ)*λ^4*Δλ) / sum(I_D(λ)*Δλ)
+      const aepsStr=v('uv-a-eps');
+      if(aepsStr&&uvr.aabs.length){
+        const epsFactor=parseFloat(aepsStr)||1;
+        let num=0,den=0;
+        uvr.dwl.forEach((wli,i)=>{
+          const epsA=uvr.aabs[i]||0;
+          num+=fd_interp(uvr.dwl,uvr.dabs,wli)*(epsA*epsFactor)*Math.pow(wli,4)*(i>0?uvr.dwl[i]-uvr.dwl[i-1]:1);
+          den+=fd_interp(uvr.dwl,uvr.dabs,wli)*(i>0?uvr.dwl[i]-uvr.dwl[i-1]:1);
+        });
+        J=den>0?num/den:1e12;
+      } else J=1e12;
+    } else J=1e12;
+  }
+  document.getElementById('fret-J').value=J.toExponential(3);
+  const n4inv=1/Math.pow(n,4);
+  const R0=calcR0(kappa2,phi,n4inv,J);
+  const Edist=!isNaN(r)?calcFRETeff(R0,r):NaN;
+  const rFromE=!isNaN(Edata)&&Edata>0&&Edata<1?R0*Math.pow(1/Edata-1,1/6):NaN;
+  document.getElementById('fret-stats').innerHTML=
+    statCard('R₀',fmt(R0,2)+' Å','Förster radius')+
+    (!isNaN(Edist)?statCard('E (from r)',fmt(Edist*100,2)+'%','Distance-based'):'')+
+    (!isNaN(Edata)?statCard('E (from data)',fmt(Edata*100,2)+'%','Spectral'):'')+
+    (!isNaN(rFromE)?statCard('r (from E)',fmt(rFromE,2)+' Å','Calculated distance'):'')+
+    statCard('J(λ)',fmtE(J),'M⁻¹cm⁻¹nm⁴');
+  document.getElementById('fret-formula').innerHTML=`R₀ = 0.211 × (κ²·Φ_D·n⁻⁴·J)^(1/6) × 10<br>
+  = 0.211 × (${fmt(kappa2,4)} × ${fmt(phi,4)} × ${fmt(n4inv,4)} × ${fmtE(J)})^(1/6) × 10<br>
+  = <strong>${fmt(R0,3)} Å</strong>`;
+  // E vs r/R0 curve
+  const rR0=Array.from({length:100},(_,i)=>0.1+i*2.4/99);
+  const Ecurve=rR0.map(rr=>1/(1+Math.pow(rr,6)));
+  const measPoint=!isNaN(r)&&R0>0?[{x:r/R0,y:Edist}]:[];
+  newChart('fret-chart1',{type:'line',data:{datasets:[
+    {label:'E vs r/R₀',data:rR0.map((v,i)=>({x:v,y:Ecurve[i]})),borderColor:'#0d9488',fill:false,pointRadius:0,tension:.3},
+    ...(measPoint.length?[{label:'Measured',data:measPoint,backgroundColor:'#dc2626',pointRadius:8,type:'scatter'}]:[])
+  ]},options:{...baseChartOpts('r/R₀','FRET Efficiency E')}});
+  // Spectral overlap
+  const uvr=appState.results.uvvis;
+  if(uvr&&uvr.dwl.length){
+    const dDataset={label:'Donor Em',data:uvr.dwl.map((xi,i)=>({x:xi,y:uvr.dabs[i]})),borderColor:'#0d9488',fill:false,pointRadius:0,tension:.3};
+    const aDataset=uvr.awl.length?{label:'Acceptor Abs',data:uvr.awl.map((xi,i)=>({x:xi,y:uvr.aabs[i]})),borderColor:'#ea6c00',fill:false,pointRadius:0,tension:.3}:null;
+    newChart('fret-chart2',{type:'line',data:{datasets:[dDataset,...(aDataset?[aDataset]:[])].filter(Boolean)},options:{...baseChartOpts('Wavelength (nm)','Signal')}});
+  }
+  const isEfficient=R0>30?'efficiently':'weakly';
+  document.getElementById('fret-interp').textContent=`R₀ = ${fmt(R0,2)} Å indicates energy transfer occurs ${isEfficient} up to ~${fmt(R0,0)} Å.${!isNaN(Edata)?' Measured efficiency = '+fmt(Edata*100,2)+'% corresponds to r = '+fmt(rFromE,2)+' Å.':''}`;
+  appState.results.fret={R0,Edist,Edata,rFromE,J,phi,kappa2,n};
+  showRight('fret-right');
+}
+
+function fd_interp(x,y,xi){
+  const i=x.findIndex(v=>v>=xi);
+  if(i<0) return y[y.length-1];
+  if(i===0) return y[0];
+  const t=(xi-x[i-1])/(x[i]-x[i-1]);
+  return y[i-1]+t*(y[i]-y[i-1]);
+}
+
+function exportFRETTable(){
+  const r=appState.results.fret;
+  if(!r) return;
+  const txt=`FRET Parameters\nR₀: ${fmt(r.R0,3)} Å\nJ(λ): ${fmtE(r.J)} M⁻¹cm⁻¹nm⁴\nΦ_D: ${r.phi}\nκ²: ${r.kappa2}\nn: ${r.n}${!isNaN(r.Edist)?'\nE (dist): '+fmt(r.Edist*100,2)+'%':''}${!isNaN(r.rFromE)?'\nr (from E): '+fmt(r.rFromE,2)+' Å':''}`;
+  navigator.clipboard.writeText(txt).then(()=>showToast('Copied!'));
+}
+
+// ============================================================
+// TAB 11: REPORT
+// ============================================================
+function generateReport(){
+  const r=appState.results;
+  const u=appState.user||{};
+  let html=`<div style="display:flex;flex-direction:column;gap:20px">`;
+  // Registration
+  html+=`<div class="card"><h3 style="margin-bottom:10px;font-size:15px">👤 Registration Info</h3>
+    <div class="stat-grid">${statCard('Name',u.name||'—')+statCard('Institute',u.institute||'—')+statCard('Email',u.email||'—')+statCard('Mode',appState.mode==='quench'?'Quenching':'Enhancement')}</div></div>`;
+  // Experiment Summary
+  if(appState.setupData.x.length){
+    html+=`<div class="card"><h3 style="margin-bottom:10px;font-size:15px">🧪 Experiment Summary</h3>
+      <div class="stat-grid">${statCard('Data Points',appState.setupData.x.length)+statCard('X Range',fmtE(Math.min(...appState.setupData.x))+' – '+fmtE(Math.max(...appState.setupData.x)))+statCard('Y Range',fmtE(Math.min(...appState.setupData.y))+' – '+fmtE(Math.max(...appState.setupData.y)))}</div></div>`;
+  }
+  // Generator
+  if(r.generator){const g=r.generator;html+=`<div class="card"><h3 style="margin-bottom:10px;font-size:15px">⚗ Synthetic Generator</h3><div class="stat-grid">${statCard('Linear R²',fmt(g.lr.r2))+statCard('Ksv',fmtE(g.svLR.slope),'M⁻¹')+statCard('LOD',fmtE(g.lod))}</div></div>`;}
+  // SV
+  if(r.sv){html+=`<div class="card"><h3 style="margin-bottom:10px;font-size:15px">📐 Stern-Völmer</h3><div class="stat-grid">${statCard('Ksv',fmtE(r.sv.Ksv),'M⁻¹')+statCard('R²',fmt(r.sv.r2))+statCard('kq',fmtE(r.sv.kq),'M⁻¹s⁻¹')+statCard('Type',r.sv.type)}</div></div>`;}
+  // BH
+  if(r.bh){html+=`<div class="card"><h3 style="margin-bottom:10px;font-size:15px">🔗 Benesi-Hildebrand</h3><div class="stat-grid">${statCard('Ka',fmtE(r.bh.Ka),'M⁻¹')+statCard('R²',fmt(r.bh.r2))+statCard('ΔF_max',fmt(r.bh.dFmax,2))}</div></div>`;}
+  // LOD/LOQ
+  if(r.lod){html+=`<div class="card"><h3 style="margin-bottom:10px;font-size:15px">📏 LOD / LOQ</h3><div class="stat-grid">${statCard('LOD',fmtE(r.lod.lod)+' '+r.lod.unit)+statCard('LOQ',fmtE(r.lod.loq)+' '+r.lod.unit)+statCard('Sensitivity',fmtE(r.lod.slope))+statCard('σ (blank)',fmt(r.lod.sigma,4))}</div></div>`;}
+  // Selectivity
+  if(r.selectivity&&r.selectivity.length){html+=`<div class="card"><h3 style="margin-bottom:10px;font-size:15px">🎯 Selectivity</h3><div class="stat-grid">${r.selectivity.slice(0,4).map(d=>statCard(d.name,'Ratio: '+fmt(d.ratio,3))).join('')}</div></div>`;}
+  // Interference
+  if(r.interference&&r.interference.length){const good=r.interference.filter(d=>Math.abs(d.dev)<10).length;html+=`<div class="card"><h3 style="margin-bottom:10px;font-size:15px">⚡ Interference</h3><div class="stat-grid">${statCard('Tested',r.interference.length)+statCard('<10% dev',good+'/'+r.interference.length)}</div></div>`;}
+  // FRET
+  if(r.fret){html+=`<div class="card"><h3 style="margin-bottom:10px;font-size:15px">🔬 FRET</h3><div class="stat-grid">${statCard('R₀',fmt(r.fret.R0,2)+' Å')+(!isNaN(r.fret.Edata)?statCard('E',fmt(r.fret.Edata*100,2)+'%'):'')+(!isNaN(r.fret.rFromE)?statCard('r',fmt(r.fret.rFromE,2)+' Å'):'')}</div></div>`;}
+  // Batch
+  if(r.batch&&r.batch.length){html+=`<div class="card"><h3 style="margin-bottom:10px;font-size:15px">⇥ Batch Results</h3><div class="stat-grid">${r.batch.slice(0,4).map(b=>statCard(b.name,'Ksv: '+fmtE(b.Ksv),'R²: '+fmt(b.r2))).join('')}</div></div>`;}
+  html+='</div>';
+  document.getElementById('report-content').innerHTML=html;
+  appState.results.reportHTML=html;
+}
+
+function copyReportMD(){
+  const r=appState.results;
+  const u=appState.user||{};
+  let md=`# Fluoresense Analytics Report\n\n## Registration\n- **Name:** ${u.name||'—'}\n- **Institute:** ${u.institute||'—'}\n- **Email:** ${u.email||'—'}\n- **Mode:** ${appState.mode}\n\n`;
+  if(r.sv) md+=`## Stern-Völmer\n- Ksv: ${fmtE(r.sv.Ksv)} M⁻¹\n- R²: ${fmt(r.sv.r2)}\n- kq: ${fmtE(r.sv.kq)} M⁻¹s⁻¹\n\n`;
+  if(r.lod) md+=`## LOD/LOQ\n- LOD: ${fmtE(r.lod.lod)} ${r.lod.unit}\n- LOQ: ${fmtE(r.lod.loq)} ${r.lod.unit}\n\n`;
+  navigator.clipboard.writeText(md).then(()=>showToast('Markdown copied!'));
+}
+
+// ============================================================
+// INIT SLOTS
+// ============================================================
+// Init LOD blanks
+for(let i=0;i<3;i++) addLODBlank();
+// Init MA slots
+for(let i=0;i<2;i++) addMASlot();
+// Init selectivity slots
+for(let i=0;i<3;i++) addSelSlot();
+// Init interference slots
+for(let i=0;i<2;i++) addIntSlot();
+// Init BC datasets
+for(let i=0;i<1;i++) addBCDataset();
+// Init titration slots
+for(let i=0;i<2;i++) addTitSlot();
+// Init FL slots
+for(let i=0;i<2;i++) addFLSlot();
+
+// ============================================================
+// EXPORT JSON REPORT
+// ============================================================
+function exportReportJSON(){
+  const payload={
+    timestamp: new Date().toISOString(),
+    user: appState.user,
+    mode: appState.mode,
+    setupData: appState.setupData,
+    results: appState.results
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='fluoresense_report.json';
+  a.click();
+  showToast('Report JSON downloaded!');
+}
+
+// ============================================================
+// KEYBOARD SHORTCUTS
+// ============================================================
+document.addEventListener('keydown',function(e){
+  if(e.ctrlKey&&e.key==='Enter'){
+    const panel=document.querySelector('.ana-panel.active');
+    if(!panel) return;
+    const btn=panel.querySelector('.btn-primary');
+    if(btn&&!btn.disabled) btn.click();
+  }
+});
+
+// ============================================================
+// CHART.JS GLOBAL DEFAULTS
+// ============================================================
+Chart.defaults.font.family="'DM Sans', sans-serif";
+Chart.defaults.color='#64748b';
+Chart.defaults.plugins.tooltip.backgroundColor='rgba(30,41,59,0.95)';
+Chart.defaults.plugins.tooltip.titleFont={family:"'Space Mono',monospace",size:11};
+Chart.defaults.plugins.tooltip.bodyFont={family:"'DM Sans',sans-serif",size:12};
+Chart.defaults.plugins.tooltip.padding=10;
+Chart.defaults.plugins.tooltip.cornerRadius=6;
+Chart.defaults.plugins.legend.labels.usePointStyle=true;
+Chart.defaults.plugins.legend.labels.pointStyleWidth=8;
+Chart.defaults.animation.duration=400;
+
+// ============================================================
+// RESPONSIVE NAV HEADER TITLE
+// ============================================================
+function updateHeaderTitle(){
+  // Tab grid is always visible; shrink font on narrow screens via CSS
+  const topBar=document.querySelector('.header-top-bar');
+  if(topBar) topBar.style.paddingLeft=window.innerWidth<600?'10px':'20px';
+}
+window.addEventListener('resize',updateHeaderTitle);
+updateHeaderTitle();
+
+// ============================================================
+// SLOPE SOURCE AUTO-FILL ON SELECT CHANGE
+// ============================================================
+document.getElementById('lod-slope-src')?.addEventListener('change',function(){
+  const src=this.value;
+  if(src==='tab1'&&appState.results.generator?.lr){
+    document.getElementById('lod-slope').value=appState.results.generator.lr.slope.toFixed(6);
+    showToast('Slope filled from Generator tab');
+  } else if(src==='sv'&&appState.results.sv?.Ksv){
+    document.getElementById('lod-slope').value=appState.results.sv.Ksv.toFixed(6);
+    showToast('Slope filled from SV tab');
+  }
+});
+
+// ============================================================
+// REPORT MODAL OPEN FROM REPORT PANEL
+// ============================================================
+function openReportModal(){
+  generateReport();
+  document.getElementById('modal-report-content').innerHTML=document.getElementById('report-content').innerHTML;
+  document.getElementById('report-modal').classList.add('open');
+}
+
+// ============================================================
+// EDIT DATA NAVIGATION
+// ============================================================
+function goEditData(){
+  showPage(2);
+  // Re-populate textareas if setupData exists
+  if(appState.setupData && appState.setupData.x.length){
+    const keys=['x','y','wl','fw','auc'];
+    const ids=['inp-x','inp-y','inp-wl','inp-fw','inp-auc'];
+    keys.forEach((k,i)=>{
+      const el=document.getElementById(ids[i]);
+      if(el && appState.setupData[k].length){
+        el.value=appState.setupData[k].join('\n');
+        el.classList.add('filled');
+      }
+    });
+    // Update count badges
+    keys.forEach((k,i)=>{
+      const badge=document.getElementById('cnt-'+k);
+      if(badge) badge.textContent=appState.setupData[k].length;
+    });
+    // Re-check go button
+    checkDataReady();
+  }
+  // Re-set mode toggle
+  const mq=document.getElementById('mode-quench');
+  const me=document.getElementById('mode-enhance');
+  if(mq&&me){
+    mq.classList.toggle('active',appState.mode==='quench');
+    me.classList.toggle('active',appState.mode==='enhance');
+  }
+  if(appState.user){
+    const wn=document.getElementById('welcome-name');
+    if(wn) wn.textContent='Welcome, '+appState.user.name;
+  }
+}
+
+// ============================================================
+// MISSING COUNT BADGE FOR TEXTAREA IN PAGES
+// ============================================================
+// Auto-fill data input page counts on load if setupData present
+setTimeout(()=>{
+  if(appState.setupData&&appState.setupData.x.length){
+    ['x','y','wl','fw','auc'].forEach(k=>{
+      const badge=document.getElementById('cnt-'+k);
+      if(badge) badge.textContent=appState.setupData[k].length;
+    });
+  }
+},100);
+
+// ============================================================
+// MA SLOT COUNT INIT FIX
+// ============================================================
+updateMACount();
+
+</script>
+</body>
+</html>
